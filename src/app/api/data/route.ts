@@ -10,7 +10,7 @@ import { Pool } from 'pg'
 // Pool de conexiones reutilizable (singleton)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: true },
+  ssl: { rejectUnauthorized: false }, // Supabase pooler requiere esto
   max: 5,
   idleTimeoutMillis: 30000,
 })
