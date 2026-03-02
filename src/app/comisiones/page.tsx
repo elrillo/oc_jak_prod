@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { StorySection } from "@/components/StorySection"
 import { EChart } from "@/components/EChart"
 import { categorizeCommission, valueCounts, SUCCESS_PATTERN } from "@/lib/legislative"
+import { InsightCard } from "@/components/InsightCard"
 
 const COLORS = ["#6e20d3", "#5bc2ba", "#3498db", "#eda744", "#e8627c", "#1abc9c", "#e67e22", "#95a5a6", "#8b3ee0", "#16a085", "#2980b9", "#d35400"]
 
@@ -18,6 +19,27 @@ function ComisionesContent() {
     if (!data) return []
     return valueCounts(data.jakMociones.map(m => m.tematica_asociada || categorizeCommission(m.comision_inicial)))
   }, [data])
+
+  // Hallazgos EDA: efectividad por temática
+  type ThemeStat = { name: string; count: number; laws: number; rate: number }
+  const themeEffectiveness = useMemo((): { dominant: ThemeStat | null; best: ThemeStat | null; worst: ThemeStat | null } => {
+    if (!data || themeCounts.length === 0) return { dominant: null, best: null, worst: null }
+
+    const themes: ThemeStat[] = themeCounts.map(t => {
+      const themeProjects = data.jakMociones.filter(
+        m => (m.tematica_asociada || categorizeCommission(m.comision_inicial)) === t.name
+      )
+      const laws = themeProjects.filter(m => SUCCESS_PATTERN.test(m.estado_del_proyecto_de_ley))
+      return { name: t.name, count: t.count, laws: laws.length, rate: t.count > 0 ? (laws.length / t.count) * 100 : 0 }
+    })
+
+    const dominant = themes[0] || null
+    const withLaws = themes.filter(t => t.laws > 0)
+    const best = withLaws.sort((a, b) => b.rate - a.rate)[0] || null
+    const worst = themes.filter(t => t.count >= 5 && t.laws === 0)[0] || null
+
+    return { dominant, best, worst }
+  }, [data, themeCounts])
 
   if (!data) return null
 
@@ -59,6 +81,35 @@ function ComisionesContent() {
         chart={<EChart option={treemapOption} style={{ height: '380px' }} />}
         textLeft
       />
+
+      {/* Hallazgos EDA */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+        {themeEffectiveness.dominant && (
+          <InsightCard
+            variant="stat"
+            stat={`${themeEffectiveness.dominant.count}`}
+            title={`${themeEffectiveness.dominant.name}`}
+            description={`Temática dominante con el ${data.jakMociones.length > 0 ? ((themeEffectiveness.dominant.count / data.jakMociones.length) * 100).toFixed(0) : 0}% de todos los proyectos. Define el núcleo de la agenda legislativa de Kast.`}
+          />
+        )}
+        {themeEffectiveness.best && themeEffectiveness.worst ? (
+          <InsightCard
+            variant="comparison"
+            title="Efectividad por Área"
+            left={{ value: `${themeEffectiveness.best.rate.toFixed(0)}%`, label: themeEffectiveness.best.name }}
+            right={{ value: `${themeEffectiveness.worst.count} proj.`, label: `${themeEffectiveness.worst.name} — 0 leyes` }}
+            description={`La temática con mayor tasa de éxito versus un área con múltiples proyectos pero sin leyes aprobadas.`}
+          />
+        ) : themeEffectiveness.best && (
+          <InsightCard
+            variant="stat"
+            stat={`${themeEffectiveness.best.rate.toFixed(0)}%`}
+            title={`Área Más Efectiva: ${themeEffectiveness.best.name}`}
+            description={`${themeEffectiveness.best.laws} de ${themeEffectiveness.best.count} proyectos se convirtieron en ley, la mayor tasa de éxito entre todas las temáticas.`}
+            accentColor="#5bc2ba"
+          />
+        )}
+      </div>
 
       <div className="border-t border-white/5 my-8" />
 

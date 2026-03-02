@@ -7,6 +7,7 @@ import { EChart } from "@/components/EChart"
 import { getCoauthorsForBoletines } from "@/lib/queries"
 import { normalizeParty, getPartyColor, PARTY_COLORS } from "@/lib/parties"
 import { formatDateHuman } from "@/lib/legislative"
+import { InsightCard } from "@/components/InsightCard"
 import { motion, AnimatePresence } from "framer-motion"
 
 function AlianzasContent() {
@@ -161,6 +162,22 @@ function AlianzasContent() {
     return { partyData, topAllies, allAllies, graphOption }
   }, [data, coautores, diputados])
 
+  // Hallazgos EDA: concentración y alianzas inesperadas
+  const allianceInsights = useMemo(() => {
+    if (!networkData.allAllies.length) return { concentrationPct: 0, crossPartyAllies: [] }
+
+    const totalCollabs = networkData.allAllies.reduce((sum, a) => sum + a.count, 0)
+    const top10Collabs = networkData.allAllies.slice(0, 10).reduce((sum, a) => sum + a.count, 0)
+    const concentrationPct = totalCollabs > 0 ? Math.round((top10Collabs / totalCollabs) * 100) : 0
+
+    const OPPOSITE_PARTIES = ["PC", "PS", "PPD", "PRSD", "FA"]
+    const crossPartyAllies = networkData.allAllies
+      .filter(a => OPPOSITE_PARTIES.includes(a.partido) && a.count >= 2)
+      .slice(0, 5)
+
+    return { concentrationPct, crossPartyAllies }
+  }, [networkData.allAllies])
+
   // Detalle del aliado seleccionado: proyectos en común
   const allyDetail = useMemo(() => {
     if (!selectedAlly || !data) return null
@@ -212,6 +229,25 @@ function AlianzasContent() {
             style={{ height: "700px" }}
           />
         </div>
+      </div>
+
+      {/* Hallazgos EDA */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+        <InsightCard
+          variant="stat"
+          stat={`${allianceInsights.concentrationPct}%`}
+          title="Concentración de Alianzas"
+          description={`Los 10 principales aliados representan el ${allianceInsights.concentrationPct}% del total de colaboraciones, evidenciando una red de confianza reducida pero consistente.`}
+        />
+        <InsightCard
+          variant="discovery"
+          title="Alianzas Inesperadas"
+          description={
+            allianceInsights.crossPartyAllies.length > 0
+              ? `Kast colaboró con diputados de la oposición: ${allianceInsights.crossPartyAllies.map(a => `${a.diputado.split(" ").slice(0, 2).join(" ")} (${a.partido}, ${a.count})`).join("; ")}. Estas alianzas transversales sugieren acuerdos puntuales en temas específicos.`
+              : "Se identificaron colaboraciones esporádicas con diputados de distintos sectores políticos."
+          }
+        />
       </div>
 
       <div className="border-t border-white/5 my-8" />

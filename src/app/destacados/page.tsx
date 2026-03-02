@@ -4,8 +4,10 @@ import { useMemo } from "react"
 import { useDashboard, DashboardGate } from "@/components/DashboardProvider"
 import { PageHeader } from "@/components/PageHeader"
 import { BoletinCard } from "@/components/BoletinCard"
+import { InsightCard } from "@/components/InsightCard"
 import { mapStageNumeric, categorizeCommission, SUCCESS_PATTERN } from "@/lib/legislative"
 import { getCoauthorsForBoletines } from "@/lib/queries"
+import { normalizeParty } from "@/lib/parties"
 import { motion } from "framer-motion"
 import type { MocionEnriquecida } from "@/lib/types"
 
@@ -53,6 +55,21 @@ function DestacadosContent() {
     return byId
   }, [data])
 
+  // Hallazgo: proyecto más transversal (más coautores y partidos distintos)
+  const mostTransversal = useMemo(() => {
+    if (!data || featured.length === 0) return null
+
+    const results = featured.map(m => {
+      const mCoauthors = getCoauthorsForBoletines(coautores, [m.n_boletin], data.foundName)
+      const parties = new Set(
+        mCoauthors.map(c => normalizeParty(dipMap.get(c.diputado) || null))
+      )
+      return { mocion: m, coauthorCount: mCoauthors.length, partyCount: parties.size }
+    })
+
+    return results.sort((a, b) => b.partyCount - a.partyCount || b.coauthorCount - a.coauthorCount)[0] || null
+  }, [data, featured, coautores, dipMap])
+
   if (!data) return null
 
   const leyesCount = featured.filter(m => SUCCESS_PATTERN.test(m.estado_del_proyecto_de_ley || "")).length
@@ -97,6 +114,17 @@ function DestacadosContent() {
           <p className="text-white/40 text-xs">áreas distintas</p>
         </div>
       </motion.div>
+
+      {/* Hallazgo: Proyecto más transversal */}
+      {mostTransversal && (
+        <div className="mb-8">
+          <InsightCard
+            variant="discovery"
+            title="Proyecto Más Transversal"
+            description={`"${(mostTransversal.mocion.nombre_iniciativa || "").slice(0, 100)}" (Boletín ${mostTransversal.mocion.n_boletin}) contó con ${mostTransversal.coauthorCount} coautores de ${mostTransversal.partyCount} partidos distintos, reflejando el mayor consenso multipartidario entre las mociones destacadas.`}
+          />
+        </div>
+      )}
 
       {/* Tarjetas */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { StorySection } from "@/components/StorySection"
 import { EChart } from "@/components/EChart"
 import { PERIODOS, SUCCESS_PATTERN, categorizeCommission, valueCounts } from "@/lib/legislative"
+import { InsightCard } from "@/components/InsightCard"
 
 const COLORS = ["#6e20d3", "#5bc2ba", "#3498db", "#eda744", "#e8627c", "#1abc9c", "#e67e22", "#95a5a6"]
 
@@ -101,6 +102,43 @@ function PeriodosContent() {
       <div className="grid grid-cols-2 gap-4 mb-10">
         <KpiCard title="Presentadas" value={pTotal} subtitle={selected} />
         <KpiCard title="Convertidas en Ley" value={pLeyes} subtitle={`Tasa: ${pTasa.toFixed(1)}%`} />
+      </div>
+
+      {/* Hallazgo dinámico por periodo */}
+      <div className="mb-8">
+        {selected === "2002-2006" && (
+          <InsightCard
+            variant="stat"
+            stat={`${pTotal}`}
+            title="Fase de Inicio"
+            description={`Periodo inaugural con ${pLeyes} leyes aprobadas (${pTasa.toFixed(1)}%). Fase de aprendizaje y posicionamiento legislativo en la Cámara.`}
+          />
+        )}
+        {selected === "2006-2010" && (
+          <InsightCard
+            variant="stat"
+            stat={`${pTotal}`}
+            title="Sprint Legislativo"
+            description={`Periodo más productivo con ${pLeyes} leyes (${pTasa.toFixed(1)}% de éxito). Pico de 30 mociones solo en 2008, el año de mayor actividad de toda su carrera.`}
+            accentColor="#5bc2ba"
+          />
+        )}
+        {selected === "2010-2014" && (
+          <InsightCard
+            variant="stat"
+            stat={`${pTotal}`}
+            title="Consolidación Temática"
+            description={`${pLeyes} leyes aprobadas (${pTasa.toFixed(1)}%). Periodo de consolidación con énfasis en seguridad y justicia.`}
+          />
+        )}
+        {selected === "2014-2018" && (
+          <InsightCard
+            variant="discovery"
+            title="Desaceleración Legislativa"
+            description={`${pTotal} mociones sin leyes aprobadas. Periodo marcado por la menor producción legislativa, coincidiendo con la transición hacia la candidatura presidencial de 2017.`}
+            accentColor="#e8627c"
+          />
+        )}
       </div>
 
       <div className="border-t border-white/5 my-8" />

@@ -8,6 +8,7 @@ import { EChart } from "@/components/EChart"
 import { BoletinCard } from "@/components/BoletinCard"
 import { getCoauthorsForBoletines } from "@/lib/queries"
 import { SUCCESS_PATTERN, valueCounts } from "@/lib/legislative"
+import { InsightCard } from "@/components/InsightCard"
 
 function LeyesContent() {
   const { data, coautores, diputados } = useDashboard()
@@ -33,6 +34,33 @@ function LeyesContent() {
     }, 0)
 
     return Math.round(totalDays / leyesConFechas.length)
+  }, [leyes])
+
+  // Hallazgo: ley más rápida y análisis de velocidad
+  const speedInsights = useMemo(() => {
+    const leyesConFechas = leyes.filter(m => m.publicado_en_diario_oficial && m.fecha_de_ingreso)
+    if (leyesConFechas.length === 0) return { fastest: null, monumentAvg: null, otherAvg: null }
+
+    const withDays = leyesConFechas.map(m => {
+      const pub = new Date(m.publicado_en_diario_oficial!).getTime()
+      const ing = new Date(m.fecha_de_ingreso!).getTime()
+      const days = Math.round((pub - ing) / (1000 * 60 * 60 * 24))
+      const name = (m.nombre_iniciativa || "").toLowerCase()
+      const isMonument = name.includes("monumento") || name.includes("homenaje") || name.includes("denomin") || name.includes("padre") || name.includes("héroe")
+      return { ...m, days, isMonument }
+    })
+
+    const fastest = withDays.sort((a, b) => a.days - b.days)[0] || null
+    const monuments = withDays.filter(m => m.isMonument)
+    const others = withDays.filter(m => !m.isMonument)
+    const monumentAvg = monuments.length > 0
+      ? Math.round(monuments.reduce((s, m) => s + m.days, 0) / monuments.length)
+      : null
+    const otherAvg = others.length > 0
+      ? Math.round(others.reduce((s, m) => s + m.days, 0) / others.length)
+      : null
+
+    return { fastest, monumentAvg, otherAvg }
   }, [leyes])
 
   // Charts data
@@ -142,6 +170,34 @@ function LeyesContent() {
           value={typeof avgDays === "number" ? `${avgDays} días` : avgDays}
           subtitle="Desde ingreso a publicación en Diario Oficial"
         />
+      </div>
+
+      {/* Hallazgos EDA */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+        {speedInsights.fastest && (
+          <InsightCard
+            variant="stat"
+            stat={`${speedInsights.fastest.days} días`}
+            title="Ley Más Rápida"
+            description={`"${(speedInsights.fastest.nombre_iniciativa || "").slice(0, 80)}..." (Boletín ${speedInsights.fastest.n_boletin}) fue la moción con tramitación más veloz.`}
+            accentColor="#5bc2ba"
+          />
+        )}
+        {speedInsights.monumentAvg && speedInsights.otherAvg ? (
+          <InsightCard
+            variant="comparison"
+            title="Velocidad según Tipo de Ley"
+            left={{ value: `${speedInsights.monumentAvg.toLocaleString("es-CL")}`, label: "Días prom. honoríficas" }}
+            right={{ value: `${speedInsights.otherAvg.toLocaleString("es-CL")}`, label: "Días prom. sustantivas" }}
+            description="Las leyes honoríficas y de monumentos se tramitaron significativamente más rápido que las reformas regulatorias sustantivas."
+          />
+        ) : (
+          <InsightCard
+            variant="discovery"
+            title="Velocidad de Tramitación"
+            description={`El tiempo promedio de tramitación es ${typeof avgDays === "number" ? avgDays.toLocaleString("es-CL") : avgDays} días. Las leyes honoríficas tienden a tramitarse más rápido que las reformas sustantivas.`}
+          />
+        )}
       </div>
 
       {/* Productividad por año */}

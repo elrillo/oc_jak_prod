@@ -6,7 +6,8 @@ import { PageHeader } from "@/components/PageHeader"
 import { EChart } from "@/components/EChart"
 import { BoletinCard } from "@/components/BoletinCard"
 import { getCoauthorsForBoletines } from "@/lib/queries"
-import { mapStageNumeric, mapStageLabel, valueCounts, categorizeCommission } from "@/lib/legislative"
+import { mapStageNumeric, mapStageLabel, valueCounts, categorizeCommission, SUCCESS_PATTERN } from "@/lib/legislative"
+import { InsightCard } from "@/components/InsightCard"
 
 const STAGE_COLORS: Record<number, string> = {
   0: "#6e20d3",
@@ -154,6 +155,34 @@ function EstadoContent() {
           />
         </div>
       </div>
+
+      {/* Hallazgos EDA */}
+      {(() => {
+        const leyesCount = data.jakMociones.filter(m => SUCCESS_PATTERN.test(m.estado_del_proyecto_de_ley)).length
+        const tasaExito = data.jakMociones.length > 0 ? ((leyesCount / data.jakMociones.length) * 100).toFixed(1) : "0"
+        const bottleneck = stageData.stages.reduce(
+          (max, s) => s.count > max.count ? s : max,
+          stageData.stages[0] || { name: "—", count: 0 }
+        )
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+            <InsightCard
+              variant="comparison"
+              title="Embudo Legislativo"
+              left={{ value: `${data.jakMociones.length}`, label: "Proyectos ingresados" }}
+              right={{ value: `${leyesCount}`, label: "Convertidos en ley" }}
+              description={`Solo el ${tasaExito}% completó el ciclo legislativo completo, desde su ingreso hasta la publicación en el Diario Oficial.`}
+            />
+            <InsightCard
+              variant="stat"
+              stat={`${bottleneck.count}`}
+              title={`Cuello de Botella: ${bottleneck.name}`}
+              description={`La mayor concentración de proyectos se encuentra en esta etapa, donde ${bottleneck.count} de ${data.jakMociones.length} mociones permanecen detenidas.`}
+              accentColor="#e8627c"
+            />
+          </div>
+        )
+      })()}
 
       <div className="border-t border-white/5 my-8" />
 

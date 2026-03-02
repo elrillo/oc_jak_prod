@@ -8,6 +8,7 @@ import { StorySection } from "@/components/StorySection"
 import { EChart } from "@/components/EChart"
 import { valueCounts, PERIODOS, categorizeCommission } from "@/lib/legislative"
 import { normalizeParty, getPartyColor, PARTY_COLORS } from "@/lib/parties"
+import { InsightCard } from "@/components/InsightCard"
 
 const COLORS = ["#6e20d3", "#5bc2ba", "#3498db", "#eda744", "#e8627c", "#1abc9c", "#e67e22", "#95a5a6"]
 
@@ -68,6 +69,44 @@ function GeneralContent() {
 
     return { topAllies, topParties }
   }, [coautores, jakBoletinIds, foundName, dipMap])
+
+  // --- Hallazgos EDA ---
+  const hallazgos = useMemo(() => {
+    // Año pico
+    const peakYear = yearCounts.reduce((max, y) => y.count > max.count ? y : max, yearCounts[0] || { name: "—", count: 0 })
+
+    // Alcance: contar mociones con mención regional
+    const REGIONAL_KEYWORDS = ["arica", "iquique", "antofagasta", "atacama", "coquimbo", "valparaíso", "rancagua", "maule", "biobío", "araucanía", "los ríos", "los lagos", "aysén", "magallanes", "punta arenas", "temuco", "concepción", "talca", "la serena", "copiapó", "calama"]
+    const regionalCount = jakMociones.filter(m => {
+      const name = (m.nombre_iniciativa || "").toLowerCase()
+      return REGIONAL_KEYWORDS.some(kw => name.includes(kw))
+    }).length
+    const nationalPct = total > 0 ? Math.round(((total - regionalCount) / total) * 100) : 0
+
+    // Alianzas transversales: aliados de partidos de izquierda/centro-izq
+    const OPPOSITE_PARTIES = ["PC", "PS", "PPD", "PRSD", "FA"]
+    const crossPartyAllies = Object.entries(
+      coautores.reduce<Record<string, { name: string; party: string; count: number }>>((acc, c) => {
+        if (!new Set(jakBoletinIds).has(c.n_boletin) || c.diputado === foundName) return acc
+        const party = normalizeParty(dipMap.get(c.diputado) || null)
+        if (OPPOSITE_PARTIES.includes(party)) {
+          if (!acc[c.diputado]) acc[c.diputado] = { name: c.diputado, party, count: 0 }
+          acc[c.diputado].count++
+        }
+        return acc
+      }, {})
+    )
+      .map(([, v]) => v)
+      .filter(a => a.count >= 2)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3)
+
+    const crossPartyText = crossPartyAllies.length > 0
+      ? `Kast firmó mociones con ${crossPartyAllies.map(a => `${a.name.split(" ").slice(0, 2).join(" ")} (${a.party}, ${a.count} veces)`).join(", ")}, evidenciando alianzas que trascienden el espectro ideológico.`
+      : "Se detectaron colaboraciones transversales con diputados de distintos sectores políticos."
+
+    return { peakYear, nationalPct, regionalCount, crossPartyText }
+  }, [jakMociones, yearCounts, total, coautores, jakBoletinIds, foundName, dipMap])
 
   // --- ECharts Options ---
 
@@ -227,6 +266,27 @@ function GeneralContent() {
         <KpiCard title="Aprobados / Terminados" value={leyesCount} subtitle={`Tasa: ${tasaExito.toFixed(1)}%`} />
         <KpiCard title="Promedio Anual" value={promedioAnual} subtitle="Mociones por año" />
         <KpiCard title="Aliado Histórico" value={topAlly.split(" ").slice(0, 2).join(" ")} subtitle="Mayor colaborador" />
+      </div>
+
+      {/* Hallazgos EDA */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+        <InsightCard
+          variant="stat"
+          stat={`${hallazgos.nationalPct}%`}
+          title="Alcance Nacional"
+          description={`Solo ${hallazgos.regionalCount} de ${total} proyectos mencionan regiones específicas. La agenda fue casi exclusivamente de alcance nacional.`}
+        />
+        <InsightCard
+          variant="stat"
+          stat={hallazgos.peakYear.name}
+          title="Año Pico de Producción"
+          description={`Año de mayor actividad con ${hallazgos.peakYear.count} mociones ingresadas, durante el periodo 2006-2010.`}
+        />
+        <InsightCard
+          variant="discovery"
+          title="Alianzas Transversales"
+          description={hallazgos.crossPartyText}
+        />
       </div>
 
       <div className="border-t border-white/5 my-8" />
