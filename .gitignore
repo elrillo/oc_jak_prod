@@ -27,3 +27,10 @@ tsconfig.tsbuildinfo
 # Misc
 *.log
 npm-debug.log*
+
+# Auditoria de seguridad 2026-03-03
+__pycache__/
+*.pyc
+*.pem
+id_rsa
+credentials.json
