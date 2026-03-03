@@ -55,9 +55,9 @@ function PeriodosContent() {
       data: themeCounts.map((t, i) => ({ name: t.name, value: t.count, itemStyle: { color: COLORS[i % COLORS.length] } })),
       label: { show: true, color: '#fff', fontSize: 12, formatter: '{b}\n{c}' },
       breadcrumb: { show: false },
-      itemStyle: { borderColor: '#0c0d0e', borderWidth: 3, gapWidth: 0 },
+      itemStyle: { borderWidth: 0, gapWidth: 0 },
       levels: [{
-        itemStyle: { borderColor: '#0c0d0e', borderWidth: 3, gapWidth: 0 },
+        itemStyle: { borderWidth: 0, gapWidth: 0 },
       }],
     }],
   }
