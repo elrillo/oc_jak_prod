@@ -130,6 +130,20 @@ export function formatDateHuman(val: string | null): string {
 }
 
 /**
+ * Orden cronológico de estados legislativos para gráficos.
+ * De menos avance a más avance en el proceso.
+ */
+export function getStatusOrder(status: string): number {
+  const s = status.toLowerCase()
+  if (s.includes("archivado") || s.includes("retirado")) return 0
+  if (s.includes("primer") || s.includes("1er") || s.includes("en tramitación")) return 1
+  if (s.includes("segundo") || s.includes("2do")) return 2
+  if (s.includes("tercer") || s.includes("3er") || s.includes("mixta")) return 3
+  if (s.includes("publicado") || s.includes("ley") || s.includes("terminada") || s.includes("aprobado")) return 4
+  return 5
+}
+
+/**
  * Cuenta las frecuencias de valores en un array de strings.
  * Equivalente a pandas value_counts().
  */

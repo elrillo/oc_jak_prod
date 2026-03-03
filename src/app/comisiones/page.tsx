@@ -50,9 +50,9 @@ function ComisionesContent() {
       data: themeCounts.map((t, i) => ({ name: t.name, value: t.count, itemStyle: { color: COLORS[i % COLORS.length] } })),
       label: { show: true, color: '#fff', fontSize: 12, formatter: '{b}\n{c}' },
       breadcrumb: { show: false },
-      itemStyle: { borderColor: '#0c0d0e', borderWidth: 2, gapWidth: 2 },
+      itemStyle: { borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, gapWidth: 1 },
       levels: [{
-        itemStyle: { borderColor: '#0c0d0e', borderWidth: 3, gapWidth: 3 },
+        itemStyle: { borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, gapWidth: 1 },
       }],
     }],
   }
@@ -83,7 +83,7 @@ function ComisionesContent() {
       />
 
       {/* Hallazgos EDA */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-12">
         {themeEffectiveness.dominant && (
           <InsightCard
             variant="stat"
@@ -111,7 +111,7 @@ function ComisionesContent() {
         )}
       </div>
 
-      <div className="border-t border-white/5 my-8" />
+      <div className="border-t border-white/5 my-12" />
 
       {/* Selector de temática */}
       <h3 className="font-serif text-xl mb-4 text-center">Explorar por Temática</h3>

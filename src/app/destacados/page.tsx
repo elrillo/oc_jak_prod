@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { BoletinCard } from "@/components/BoletinCard"
 import { InsightCard } from "@/components/InsightCard"
 import { mapStageNumeric, categorizeCommission, SUCCESS_PATTERN } from "@/lib/legislative"
-import { getCoauthorsForBoletines } from "@/lib/queries"
+import { getCoauthorsForBoletines, buildDipMap, getPartyForDeputy } from "@/lib/queries"
 import { normalizeParty } from "@/lib/parties"
 import { motion } from "framer-motion"
 import type { MocionEnriquecida } from "@/lib/types"
@@ -24,9 +24,7 @@ const FEATURED_IDS = [
 function DestacadosContent() {
   const { data, coautores, diputados } = useDashboard()
 
-  const dipMap = useMemo(() => {
-    return new Map(diputados.map(d => [d.diputado, d.partido || d.partido_politico || null]))
-  }, [diputados])
+  const dipMap = useMemo(() => buildDipMap(diputados), [diputados])
 
   const featured = useMemo(() => {
     if (!data) return []
@@ -62,7 +60,7 @@ function DestacadosContent() {
     const results = featured.map(m => {
       const mCoauthors = getCoauthorsForBoletines(coautores, [m.n_boletin], data.foundName)
       const parties = new Set(
-        mCoauthors.map(c => normalizeParty(dipMap.get(c.diputado) || null))
+        mCoauthors.map(c => normalizeParty(getPartyForDeputy(dipMap, c, m.periodo) || null))
       )
       return { mocion: m, coauthorCount: mCoauthors.length, partyCount: parties.size }
     })

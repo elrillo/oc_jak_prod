@@ -6,7 +6,8 @@ import { KpiCard } from "@/components/KpiCard"
 import { PageHeader } from "@/components/PageHeader"
 import { StorySection } from "@/components/StorySection"
 import { EChart } from "@/components/EChart"
-import { valueCounts, PERIODOS, categorizeCommission } from "@/lib/legislative"
+import { valueCounts, PERIODOS, categorizeCommission, getStatusOrder, getPeriod } from "@/lib/legislative"
+import { buildDipMap, getPartyForDeputy } from "@/lib/queries"
 import { normalizeParty, getPartyColor, PARTY_COLORS } from "@/lib/parties"
 import { InsightCard } from "@/components/InsightCard"
 
@@ -18,10 +19,10 @@ function GeneralContent() {
 
   const { jakMociones, jakBoletinIds, foundName, total, leyesCount, tasaExito, promedioAnual, topAlly } = data
 
-  // Estado de proyectos (donut)
+  // Estado de proyectos (donut) — orden cronológico
   const statusCounts = valueCounts(
     jakMociones.map(m => m.estado_del_proyecto_de_ley).filter(Boolean)
-  ).slice(0, 8)
+  ).slice(0, 8).sort((a, b) => getStatusOrder(a.name) - getStatusOrder(b.name))
 
   // Temáticas (barras horizontales) — usa tematica_asociada con fallback
   const comisionCounts = valueCounts(
@@ -40,9 +41,10 @@ function GeneralContent() {
   }))
 
   // Top 5 colaboradores y Top 5 partidos
-  const dipMap = useMemo(() => {
-    return new Map(diputados.map(d => [d.diputado, d.partido || d.partido_politico || null]))
-  }, [diputados])
+  const dipMap = useMemo(() => buildDipMap(diputados), [diputados])
+
+  // Mapa boletín → periodo para lookups rápidos
+  const boletinPeriodo = useMemo(() => new Map(jakMociones.map(m => [m.n_boletin, m.periodo || ''])), [jakMociones])
 
   const { topAllies, topParties } = useMemo(() => {
     const jakSet = new Set(jakBoletinIds)
@@ -52,7 +54,8 @@ function GeneralContent() {
     for (const c of coautores) {
       if (jakSet.has(c.n_boletin) && c.diputado !== foundName) {
         allyCounts[c.diputado] = (allyCounts[c.diputado] || 0) + 1
-        const party = normalizeParty(dipMap.get(c.diputado) || null)
+        const periodo = boletinPeriodo.get(c.n_boletin) || ''
+        const party = normalizeParty(getPartyForDeputy(dipMap, c, periodo) || null)
         partyCounts[party] = (partyCounts[party] || 0) + 1
       }
     }
@@ -68,12 +71,13 @@ function GeneralContent() {
       .map(([name, count]) => ({ name, count }))
 
     return { topAllies, topParties }
-  }, [coautores, jakBoletinIds, foundName, dipMap])
+  }, [coautores, jakBoletinIds, foundName, dipMap, boletinPeriodo])
 
   // --- Hallazgos EDA ---
   const hallazgos = useMemo(() => {
-    // Año pico
+    // Año de mayor actividad
     const peakYear = yearCounts.reduce((max, y) => y.count > max.count ? y : max, yearCounts[0] || { name: "—", count: 0 })
+    const peakPeriod = getPeriod(`${peakYear.name}-06-01`)
 
     // Alcance: contar mociones con mención regional
     const REGIONAL_KEYWORDS = ["arica", "iquique", "antofagasta", "atacama", "coquimbo", "valparaíso", "rancagua", "maule", "biobío", "araucanía", "los ríos", "los lagos", "aysén", "magallanes", "punta arenas", "temuco", "concepción", "talca", "la serena", "copiapó", "calama"]
@@ -88,7 +92,8 @@ function GeneralContent() {
     const crossPartyAllies = Object.entries(
       coautores.reduce<Record<string, { name: string; party: string; count: number }>>((acc, c) => {
         if (!new Set(jakBoletinIds).has(c.n_boletin) || c.diputado === foundName) return acc
-        const party = normalizeParty(dipMap.get(c.diputado) || null)
+        const periodo = boletinPeriodo.get(c.n_boletin) || ''
+        const party = normalizeParty(getPartyForDeputy(dipMap, c, periodo) || null)
         if (OPPOSITE_PARTIES.includes(party)) {
           if (!acc[c.diputado]) acc[c.diputado] = { name: c.diputado, party, count: 0 }
           acc[c.diputado].count++
@@ -105,8 +110,8 @@ function GeneralContent() {
       ? `Kast firmó mociones con ${crossPartyAllies.map(a => `${a.name.split(" ").slice(0, 2).join(" ")} (${a.party}, ${a.count} veces)`).join(", ")}, evidenciando alianzas que trascienden el espectro ideológico.`
       : "Se detectaron colaboraciones transversales con diputados de distintos sectores políticos."
 
-    return { peakYear, nationalPct, regionalCount, crossPartyText }
-  }, [jakMociones, yearCounts, total, coautores, jakBoletinIds, foundName, dipMap])
+    return { peakYear, peakPeriod, nationalPct, regionalCount, crossPartyText }
+  }, [jakMociones, yearCounts, total, coautores, jakBoletinIds, foundName, dipMap, boletinPeriodo])
 
   // --- ECharts Options ---
 
@@ -223,7 +228,7 @@ function GeneralContent() {
       data: [...topAllies].reverse().map(a => ({
         value: a.count,
         itemStyle: {
-          color: getPartyColor(normalizeParty(dipMap.get(a.fullName) || null)),
+          color: getPartyColor(normalizeParty(getPartyForDeputy(dipMap, { n_boletin: '', diputado: a.fullName }, undefined) || null)),
           borderRadius: [0, 4, 4, 0],
         },
       })),
@@ -279,8 +284,8 @@ function GeneralContent() {
         <InsightCard
           variant="stat"
           stat={hallazgos.peakYear.name}
-          title="Año Pico de Producción"
-          description={`Año de mayor actividad con ${hallazgos.peakYear.count} mociones ingresadas, durante el periodo 2006-2010.`}
+          title="Año de Mayor Actividad"
+          description={`Año de mayor actividad con ${hallazgos.peakYear.count} mociones ingresadas, durante el periodo ${hallazgos.peakPeriod}.`}
         />
         <InsightCard
           variant="discovery"
@@ -289,7 +294,7 @@ function GeneralContent() {
         />
       </div>
 
-      <div className="border-t border-white/5 my-8" />
+      <div className="border-t border-white/5 my-12" />
 
       {/* Sección 1: Estado de la Gestión */}
       <StorySection
@@ -324,7 +329,7 @@ function GeneralContent() {
       />
 
       {/* Sección 5: Principales Colaboradores */}
-      <div className="border-t border-white/5 my-8" />
+      <div className="border-t border-white/5 my-12" />
       <h2 className="font-serif text-2xl text-center mb-2">Principales Colaboradores</h2>
       <p className="text-muted-foreground text-center text-sm mb-8 max-w-2xl mx-auto">
         Diputados y partidos que firmaron más proyectos en conjunto con Kast.

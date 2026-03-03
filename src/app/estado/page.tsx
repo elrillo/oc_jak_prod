@@ -5,7 +5,7 @@ import { useDashboard, DashboardGate } from "@/components/DashboardProvider"
 import { PageHeader } from "@/components/PageHeader"
 import { EChart } from "@/components/EChart"
 import { BoletinCard } from "@/components/BoletinCard"
-import { getCoauthorsForBoletines } from "@/lib/queries"
+import { getCoauthorsForBoletines, buildDipMap } from "@/lib/queries"
 import { mapStageNumeric, mapStageLabel, valueCounts, categorizeCommission, SUCCESS_PATTERN } from "@/lib/legislative"
 import { InsightCard } from "@/components/InsightCard"
 
@@ -26,9 +26,7 @@ function EstadoContent() {
   const [filterStage, setFilterStage] = useState<number | null>(null)
   const [filterTema, setFilterTema] = useState<string>("Todos")
 
-  const dipMap = useMemo(() => {
-    return new Map(diputados.map(d => [d.diputado, d.partido || d.partido_politico || null]))
-  }, [diputados])
+  const dipMap = useMemo(() => buildDipMap(diputados), [diputados])
 
   const stageData = useMemo(() => {
     if (!data) return { stages: [], withStage: [] }
@@ -60,7 +58,8 @@ function EstadoContent() {
       )
     }
     if (filterStage !== null) {
-      items = items.filter(m => m.progressVal === filterStage)
+      // "Ley" filter (value 3) matches progressVal >= 3 (3er Trámite + Ley)
+      items = items.filter(m => filterStage === 3 ? m.progressVal >= 3 : m.progressVal === filterStage)
     }
     if (filterTema !== "Todos") {
       items = items.filter(m => (m.tematica_asociada || categorizeCommission(m.comision_inicial)) === filterTema)
@@ -68,7 +67,7 @@ function EstadoContent() {
     return items
   }, [sortedByProgress, searchTracker, filterStage, filterTema])
 
-  // Stacked bar chart option (replaces donut)
+  // Stacked bar chart option — merge 3er Trámite + Ley into "Ley"
   const stackedBarOption = useMemo(() => {
     if (!stageData.stages.length) return {}
 
@@ -76,11 +75,22 @@ function EstadoContent() {
       "Archivado / Retirado": 0,
       "Primer Trámite": 1,
       "Segundo Trámite": 2,
-      "Tercer Trámite / Mixta": 3,
-      "Tramitación Terminada / Ley": 4,
+      "Ley": 4,
     }
 
-    const total = stageData.stages.reduce((sum, s) => sum + s.count, 0)
+    // Merge "Tercer Trámite / Mixta" and "Tramitación Terminada / Ley" into "Ley"
+    const mergedStages: { name: string; count: number }[] = []
+    let leyCount = 0
+    for (const s of stageData.stages) {
+      if (s.name === "Tercer Trámite / Mixta" || s.name === "Tramitación Terminada / Ley") {
+        leyCount += s.count
+      } else {
+        mergedStages.push(s)
+      }
+    }
+    if (leyCount > 0) mergedStages.push({ name: "Ley", count: leyCount })
+
+    const total = mergedStages.reduce((sum, s) => sum + s.count, 0)
 
     return {
       tooltip: {
@@ -99,7 +109,7 @@ function EstadoContent() {
         bottom: 0,
         textStyle: { color: "#b0b0b0", fontSize: 11 },
       },
-      series: stageData.stages.map(s => ({
+      series: mergedStages.map(s => ({
         type: "bar" as const,
         stack: "total",
         name: s.name,
@@ -165,7 +175,7 @@ function EstadoContent() {
           stageData.stages[0] || { name: "—", count: 0 }
         )
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-12">
             <InsightCard
               variant="comparison"
               title="Embudo Legislativo"
@@ -184,7 +194,7 @@ function EstadoContent() {
         )
       })()}
 
-      <div className="border-t border-white/5 my-8" />
+      <div className="border-t border-white/5 my-12" />
 
       {/* Tabla de progreso legislativo */}
       <h3 className="font-serif text-xl mb-2 text-center">Progreso por Etapa</h3>
@@ -200,7 +210,6 @@ function EstadoContent() {
               <th className="py-3 px-3 text-left min-w-[200px]">Nombre</th>
               <th className="py-3 px-2 text-center whitespace-nowrap">1er Trámite</th>
               <th className="py-3 px-2 text-center whitespace-nowrap">2do Trámite</th>
-              <th className="py-3 px-2 text-center whitespace-nowrap">3er Trámite</th>
               <th className="py-3 px-2 text-center">Ley</th>
             </tr>
           </thead>
@@ -225,9 +234,6 @@ function EstadoContent() {
                   <td className="py-2 px-2 text-center">
                     {isArchived ? <span className="text-white/20">&mdash;</span> : v >= 3 ? <span className="text-[#5bc2ba] font-bold">&#10003;</span> : <span className="text-white/10">&#9675;</span>}
                   </td>
-                  <td className="py-2 px-2 text-center">
-                    {isArchived ? <span className="text-white/20">&mdash;</span> : v >= 4 ? <span className="text-[#5bc2ba] font-bold">&#10003;</span> : <span className="text-white/10">&#9675;</span>}
-                  </td>
                 </tr>
               )
             })}
@@ -240,7 +246,7 @@ function EstadoContent() {
         )}
       </div>
 
-      <div className="border-t border-white/5 my-8" />
+      <div className="border-t border-white/5 my-12" />
 
       {/* Rastreador con BoletinCards paginado + filtros */}
       <h3 className="font-serif text-xl mb-2 text-center">Rastreador de Proyectos</h3>
@@ -271,8 +277,7 @@ function EstadoContent() {
             <option value="0">Archivado / Retirado</option>
             <option value="1">Primer Trámite</option>
             <option value="2">Segundo Trámite</option>
-            <option value="3">Tercer Trámite / Mixta</option>
-            <option value="4">Tramitación Terminada / Ley</option>
+            <option value="3">Ley</option>
           </select>
         </div>
         <div>

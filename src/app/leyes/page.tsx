@@ -6,16 +6,14 @@ import { PageHeader } from "@/components/PageHeader"
 import { KpiCard } from "@/components/KpiCard"
 import { EChart } from "@/components/EChart"
 import { BoletinCard } from "@/components/BoletinCard"
-import { getCoauthorsForBoletines } from "@/lib/queries"
+import { getCoauthorsForBoletines, buildDipMap } from "@/lib/queries"
 import { SUCCESS_PATTERN, valueCounts } from "@/lib/legislative"
 import { InsightCard } from "@/components/InsightCard"
 
 function LeyesContent() {
   const { data, coautores, diputados } = useDashboard()
 
-  const dipMap = useMemo(() => {
-    return new Map(diputados.map(d => [d.diputado, d.partido || d.partido_politico || null]))
-  }, [diputados])
+  const dipMap = useMemo(() => buildDipMap(diputados), [diputados])
 
   const leyes = useMemo(() => {
     if (!data) return []
@@ -164,7 +162,7 @@ function LeyesContent() {
       />
 
       {/* KPI: Tiempo promedio de tramitación */}
-      <div className="my-8 bg-[#141414]/60 backdrop-blur-sm border border-white/5 rounded-xl py-6">
+      <div className="my-12 bg-[#141414]/60 backdrop-blur-sm border border-white/5 rounded-xl py-6">
         <KpiCard
           title="Tiempo Promedio de Tramitación"
           value={typeof avgDays === "number" ? `${avgDays} días` : avgDays}
@@ -173,7 +171,7 @@ function LeyesContent() {
       </div>
 
       {/* Hallazgos EDA */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-12">
         {speedInsights.fastest && (
           <InsightCard
             variant="stat"
@@ -232,7 +230,7 @@ function LeyesContent() {
         </div>
       </div>
 
-      <div className="border-t border-white/5 my-8" />
+      <div className="border-t border-white/5 my-12" />
 
       {/* Listado detallado con BoletinCards */}
       <h3 className="font-serif text-xl mb-6 text-center">Listado Detallado de Leyes</h3>

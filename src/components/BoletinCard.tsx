@@ -4,6 +4,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { formatDateHuman, mapStageNumeric, mapStageLabel, categorizeCommission, SUCCESS_PATTERN } from "@/lib/legislative"
 import { normalizeParty, getPartyColor } from "@/lib/parties"
+import { getPartyForDeputy } from "@/lib/queries"
 import type { MocionEnriquecida, Coautor } from "@/lib/types"
 
 /** Parsea tags_temas que puede venir como string JSON o array */
@@ -202,7 +203,7 @@ export function BoletinCard({
           <div className="flex flex-wrap gap-1.5">
             {coauthors.length > 0 ? (
               coauthors.map(c => {
-                const party = normalizeParty(dipMap.get(c.diputado) || null)
+                const party = normalizeParty(getPartyForDeputy(dipMap, c, mocion.periodo) || null)
                 const color = getPartyColor(party)
                 return (
                   <span

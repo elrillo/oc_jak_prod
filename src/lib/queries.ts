@@ -174,6 +174,61 @@ export function processData(data: DashboardData): ProcessedData {
 }
 
 /**
+ * Construye un dipMap con claves compuestas `diputado_normalizado|periodo`.
+ * Permite resolver el partido correcto según el periodo legislativo,
+ * ya que los diputados pueden cambiar de partido entre periodos.
+ */
+export function buildDipMap(diputados: Diputado[]): Map<string, string> {
+  const map = new Map<string, string>()
+  for (const d of diputados) {
+    const name = d.diputado_normalizado || d.diputado
+    const periodo = d.periodo_legislativo || ''
+    const party = d.partido_politico_normalizado || d.partido || d.partido_politico || 'Sin Partido'
+    map.set(`${name}|${periodo}`, party)
+    // También guardar con nombre original si es distinto (fallback)
+    if (d.diputado_normalizado && d.diputado !== d.diputado_normalizado) {
+      map.set(`${d.diputado}|${periodo}`, party)
+    }
+  }
+  return map
+}
+
+/**
+ * Resuelve el partido de un diputado para un periodo específico.
+ * Fallback: si no encuentra match exacto, busca por nombre sin periodo.
+ */
+export function getPartyForDeputy(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dipMap: Map<string, any>,
+  coautor: Coautor | { n_boletin: string; diputado: string; diputado_normalizado?: string | null },
+  periodo: string | undefined | null
+): string {
+  const normName = coautor.diputado_normalizado || coautor.diputado
+
+  // 1. Match exacto: nombre normalizado + periodo
+  const exactKey = `${normName}|${periodo || ''}`
+  if (dipMap.has(exactKey)) return dipMap.get(exactKey) || 'Sin Partido'
+
+  // 2. Fallback: nombre original + periodo
+  if (coautor.diputado_normalizado && coautor.diputado !== coautor.diputado_normalizado) {
+    const legacyKey = `${coautor.diputado}|${periodo || ''}`
+    if (dipMap.has(legacyKey)) return dipMap.get(legacyKey) || 'Sin Partido'
+  }
+
+  // 3. Fallback: primer match por nombre (sin periodo específico)
+  for (const [key, party] of dipMap) {
+    if (key.startsWith(`${normName}|`)) return party || 'Sin Partido'
+  }
+
+  // 4. Fallback: buscar nombre original sin periodo
+  for (const [key, party] of dipMap) {
+    if (key.startsWith(`${coautor.diputado}|`)) return party || 'Sin Partido'
+  }
+
+  return 'Sin Partido'
+}
+
+/**
  * Obtiene los coautores para una lista de boletines, excluyendo a JAK.
  */
 export function getCoauthorsForBoletines(

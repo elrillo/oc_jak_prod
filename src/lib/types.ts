@@ -24,7 +24,7 @@ export interface Coautor {
   diputado_normalizado?: string | null
 }
 
-/** Tabla dimensión de diputados */
+/** Tabla dimensión de diputados (N filas por diputado, 1 por periodo) */
 export interface Diputado {
   diputado: string
   partido: string | null
@@ -38,6 +38,8 @@ export interface Diputado {
   region_normalizada?: string | null
   coalicion_normalizada?: string | null
   bancada_comite_normalizado?: string | null
+  // Periodo legislativo (2002-2006, 2006-2010, etc.)
+  periodo_legislativo?: string | null
 }
 
 /** Resultados del análisis NLP */

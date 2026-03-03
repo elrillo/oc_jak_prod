@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
 import { useDashboard, DashboardGate } from "@/components/DashboardProvider"
 import { PageHeader } from "@/components/PageHeader"
 import { EChart } from "@/components/EChart"
-import { getCoauthorsForBoletines } from "@/lib/queries"
+import { getCoauthorsForBoletines, buildDipMap, getPartyForDeputy } from "@/lib/queries"
 import { normalizeParty, getPartyColor, PARTY_COLORS } from "@/lib/parties"
 import { formatDateHuman } from "@/lib/legislative"
 import { InsightCard } from "@/components/InsightCard"
@@ -19,13 +19,15 @@ function AlianzasContent() {
     if (!data) return { partyData: [] as { name: string; count: number; fill: string }[], topAllies: [] as { diputado: string; partido: string; count: number }[], allAllies: [] as { diputado: string; partido: string; count: number }[], graphOption: {} as any }
 
     const jakCoauthors = getCoauthorsForBoletines(coautores, data.jakBoletinIds, data.foundName)
-    const dipMap = new Map(diputados.map(d => [d.diputado, d.partido_politico_normalizado || d.partido || d.partido_politico || null]))
+    const dipMap = buildDipMap(diputados)
+    const boletinPeriodo = new Map(data.jakMociones.map(m => [m.n_boletin, m.periodo || '']))
 
-    // Agrupar por diputado con partido (usa partido_politico_normalizado si está disponible)
+    // Agrupar por diputado con partido (periodo-aware)
     const allyMap: Record<string, { diputado: string; partido: string; count: number }> = {}
     for (const c of jakCoauthors) {
       if (!allyMap[c.diputado]) {
-        const rawParty = dipMap.get(c.diputado) || null
+        const periodo = boletinPeriodo.get(c.n_boletin) || ''
+        const rawParty = getPartyForDeputy(dipMap, c, periodo)
         allyMap[c.diputado] = { diputado: c.diputado, partido: rawParty || normalizeParty(null), count: 0 }
       }
       allyMap[c.diputado].count++
@@ -182,8 +184,8 @@ function AlianzasContent() {
   const allyDetail = useMemo(() => {
     if (!selectedAlly || !data) return null
 
-    const dipMap = new Map(diputados.map(d => [d.diputado, d.partido || d.partido_politico || null]))
-    const party = normalizeParty(dipMap.get(selectedAlly) || null)
+    const dipMap = buildDipMap(diputados)
+    const party = normalizeParty(getPartyForDeputy(dipMap, { n_boletin: '', diputado: selectedAlly }, undefined) || null)
     const allyInfo = networkData.allAllies.find(a => a.diputado === selectedAlly)
 
     // Buscar boletines donde tanto JAK como el aliado son coautores
@@ -232,7 +234,7 @@ function AlianzasContent() {
       </div>
 
       {/* Hallazgos EDA */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-12">
         <InsightCard
           variant="stat"
           stat={`${allianceInsights.concentrationPct}%`}
@@ -250,7 +252,7 @@ function AlianzasContent() {
         />
       </div>
 
-      <div className="border-t border-white/5 my-8" />
+      <div className="border-t border-white/5 my-12" />
 
       {/* Top 20 aliados */}
       <h3 className="font-serif text-xl mb-6 text-center">Top 20 Aliados</h3>
@@ -357,7 +359,7 @@ function AlianzasContent() {
         )}
       </AnimatePresence>
 
-      <div className="border-t border-white/5 my-8" />
+      <div className="border-t border-white/5 my-12" />
 
       {/* Chart de partidos agregado */}
       <div className="mt-8">

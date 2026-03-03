@@ -6,7 +6,7 @@ import { KpiCard } from "@/components/KpiCard"
 import { PageHeader } from "@/components/PageHeader"
 import { StorySection } from "@/components/StorySection"
 import { EChart } from "@/components/EChart"
-import { PERIODOS, SUCCESS_PATTERN, categorizeCommission, valueCounts } from "@/lib/legislative"
+import { PERIODOS, SUCCESS_PATTERN, categorizeCommission, valueCounts, getStatusOrder } from "@/lib/legislative"
 import { InsightCard } from "@/components/InsightCard"
 
 const COLORS = ["#6e20d3", "#5bc2ba", "#3498db", "#eda744", "#e8627c", "#1abc9c", "#e67e22", "#95a5a6"]
@@ -24,7 +24,7 @@ function PeriodosContent() {
 
   const statusCounts = valueCounts(
     filtered.map(m => m.estado_del_proyecto_de_ley).filter(Boolean)
-  )
+  ).sort((a, b) => getStatusOrder(a.name) - getStatusOrder(b.name))
 
   const themeCounts = valueCounts(
     filtered.map(m => m.tematica_asociada || categorizeCommission(m.comision_inicial))
@@ -55,9 +55,9 @@ function PeriodosContent() {
       data: themeCounts.map((t, i) => ({ name: t.name, value: t.count, itemStyle: { color: COLORS[i % COLORS.length] } })),
       label: { show: true, color: '#fff', fontSize: 12, formatter: '{b}\n{c}' },
       breadcrumb: { show: false },
-      itemStyle: { borderColor: '#0c0d0e', borderWidth: 2, gapWidth: 2 },
+      itemStyle: { borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, gapWidth: 1 },
       levels: [{
-        itemStyle: { borderColor: '#0c0d0e', borderWidth: 3, gapWidth: 3 },
+        itemStyle: { borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, gapWidth: 1 },
       }],
     }],
   }
@@ -105,43 +105,50 @@ function PeriodosContent() {
       </div>
 
       {/* Hallazgo dinámico por periodo */}
-      <div className="mb-8">
-        {selected === "2002-2006" && (
-          <InsightCard
-            variant="stat"
-            stat={`${pTotal}`}
-            title="Fase de Inicio"
-            description={`Periodo inaugural con ${pLeyes} leyes aprobadas (${pTasa.toFixed(1)}%). Fase de aprendizaje y posicionamiento legislativo en la Cámara.`}
-          />
-        )}
-        {selected === "2006-2010" && (
-          <InsightCard
-            variant="stat"
-            stat={`${pTotal}`}
-            title="Sprint Legislativo"
-            description={`Periodo más productivo con ${pLeyes} leyes (${pTasa.toFixed(1)}% de éxito). Pico de 30 mociones solo en 2008, el año de mayor actividad de toda su carrera.`}
-            accentColor="#5bc2ba"
-          />
-        )}
-        {selected === "2010-2014" && (
-          <InsightCard
-            variant="stat"
-            stat={`${pTotal}`}
-            title="Consolidación Temática"
-            description={`${pLeyes} leyes aprobadas (${pTasa.toFixed(1)}%). Periodo de consolidación con énfasis en seguridad y justicia.`}
-          />
-        )}
-        {selected === "2014-2018" && (
-          <InsightCard
-            variant="discovery"
-            title="Desaceleración Legislativa"
-            description={`${pTotal} mociones sin leyes aprobadas. Periodo marcado por la menor producción legislativa, coincidiendo con la transición hacia la candidatura presidencial de 2017.`}
-            accentColor="#e8627c"
-          />
-        )}
-      </div>
+      {(() => {
+        const peakYearInPeriod = yearCounts.length > 0
+          ? yearCounts.reduce((max, y) => y.count > max.count ? y : max, yearCounts[0])
+          : null
+        return (
+          <div className="mb-8">
+            {selected === "2002-2006" && (
+              <InsightCard
+                variant="stat"
+                stat={`${pTotal}`}
+                title="Fase de Inicio"
+                description={`Periodo inaugural con ${pLeyes} leyes aprobadas (${pTasa.toFixed(1)}%). Fase de aprendizaje y posicionamiento legislativo en la Cámara.`}
+              />
+            )}
+            {selected === "2006-2010" && (
+              <InsightCard
+                variant="stat"
+                stat={`${pTotal}`}
+                title="Mayor Productividad"
+                description={`Periodo más productivo con ${pLeyes} leyes (${pTasa.toFixed(1)}% de éxito).${peakYearInPeriod ? ` ${peakYearInPeriod.count} mociones en ${peakYearInPeriod.name}, el año de mayor actividad de toda su carrera.` : ""}`}
+                accentColor="#5bc2ba"
+              />
+            )}
+            {selected === "2010-2014" && (
+              <InsightCard
+                variant="stat"
+                stat={`${pTotal}`}
+                title="Consolidación Temática"
+                description={`${pLeyes} leyes aprobadas (${pTasa.toFixed(1)}%). Periodo de consolidación con énfasis en seguridad y justicia.`}
+              />
+            )}
+            {selected === "2014-2018" && (
+              <InsightCard
+                variant="discovery"
+                title="Desaceleración Legislativa"
+                description={`${pTotal} mociones sin leyes aprobadas. Periodo marcado por la menor producción legislativa, coincidiendo con la transición hacia la candidatura presidencial de 2017.`}
+                accentColor="#e8627c"
+              />
+            )}
+          </div>
+        )
+      })()}
 
-      <div className="border-t border-white/5 my-8" />
+      <div className="border-t border-white/5 my-12" />
 
       <StorySection
         title={`Desempeño en el periodo legislativo ${selected}`}
