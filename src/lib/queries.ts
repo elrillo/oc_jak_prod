@@ -182,7 +182,7 @@ export function buildDipMap(diputados: Diputado[]): Map<string, string> {
   const map = new Map<string, string>()
   for (const d of diputados) {
     const name = d.diputado_normalizado || d.diputado
-    const periodo = d.periodo_legislativo || ''
+    const periodo = d.periodo || d.periodo_legislativo || ''
     const party = d.partido_politico_normalizado || d.partido || d.partido_politico || 'Sin Partido'
     map.set(`${name}|${periodo}`, party)
     // También guardar con nombre original si es distinto (fallback)
@@ -215,14 +215,38 @@ export function getPartyForDeputy(
     if (dipMap.has(legacyKey)) return dipMap.get(legacyKey) || 'Sin Partido'
   }
 
-  // 3. Fallback: primer match por nombre (sin periodo específico)
-  for (const [key, party] of dipMap) {
-    if (key.startsWith(`${normName}|`)) return party || 'Sin Partido'
+  // 3. Fallback: buscar por nombre sin periodo exacto.
+  //    Si hay periodo solicitado, preferir el más cercano. Si no, tomar el primero.
+  const findBestMatch = (prefix: string): string | null => {
+    const matches: { periodo: string; party: string }[] = []
+    for (const [key, party] of dipMap) {
+      if (key.startsWith(`${prefix}|`)) {
+        const keyPeriodo = key.split('|')[1] || ''
+        matches.push({ periodo: keyPeriodo, party: party || 'Sin Partido' })
+      }
+    }
+    if (matches.length === 0) return null
+    // Si hay periodo solicitado, preferir match más cercano por orden lexicográfico
+    if (periodo) {
+      matches.sort((a, b) => {
+        const diffA = Math.abs(a.periodo.localeCompare(periodo))
+        const diffB = Math.abs(b.periodo.localeCompare(periodo))
+        return diffA - diffB
+      })
+    }
+    if (typeof window !== 'undefined' && matches.length > 1) {
+      console.warn(`[dipMap] Fallback sin match exacto: "${prefix}" periodo="${periodo || '?'}" → "${matches[0].party}" (${matches.length} opciones)`)
+    }
+    return matches[0].party
   }
 
+  const matchNorm = findBestMatch(normName)
+  if (matchNorm) return matchNorm
+
   // 4. Fallback: buscar nombre original sin periodo
-  for (const [key, party] of dipMap) {
-    if (key.startsWith(`${coautor.diputado}|`)) return party || 'Sin Partido'
+  if (coautor.diputado !== normName) {
+    const matchOrig = findBestMatch(coautor.diputado)
+    if (matchOrig) return matchOrig
   }
 
   return 'Sin Partido'

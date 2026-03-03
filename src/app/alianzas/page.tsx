@@ -22,13 +22,18 @@ function AlianzasContent() {
     const dipMap = buildDipMap(diputados)
     const boletinPeriodo = new Map(data.jakMociones.map(m => [m.n_boletin, m.periodo || '']))
 
-    // Agrupar por diputado con partido (periodo-aware)
-    const allyMap: Record<string, { diputado: string; partido: string; count: number }> = {}
+    // Agrupar por diputado con partido (periodo-aware: usa el periodo más reciente)
+    const allyMap: Record<string, { diputado: string; partido: string; count: number; lastPeriodo: string }> = {}
     for (const c of jakCoauthors) {
+      const periodo = boletinPeriodo.get(c.n_boletin) || ''
       if (!allyMap[c.diputado]) {
-        const periodo = boletinPeriodo.get(c.n_boletin) || ''
         const rawParty = getPartyForDeputy(dipMap, c, periodo)
-        allyMap[c.diputado] = { diputado: c.diputado, partido: rawParty || normalizeParty(null), count: 0 }
+        allyMap[c.diputado] = { diputado: c.diputado, partido: rawParty || normalizeParty(null), count: 0, lastPeriodo: periodo }
+      } else if (periodo > allyMap[c.diputado].lastPeriodo) {
+        // Actualizar partido si este boletín es de un periodo más reciente
+        const rawParty = getPartyForDeputy(dipMap, c, periodo)
+        allyMap[c.diputado].partido = rawParty || normalizeParty(null)
+        allyMap[c.diputado].lastPeriodo = periodo
       }
       allyMap[c.diputado].count++
     }

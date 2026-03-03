@@ -13,7 +13,7 @@ const PARTY_MAP: Record<string, string> = {
   "Partido Radical Social Demócrata": "PRSD",
   "Partido Comunista": "PC",
   "Evolución Política": "Evópoli",
-  "Partido Republicano de Chile": "Republicanos",
+  // "Partido Republicano de Chile" omitido: fundado 2019, no existe en dataset 2002-2018
   "Independiente": "IND",
   "Independientes": "IND",
 }
@@ -38,7 +38,7 @@ export function normalizeParty(pName: string | null): string {
   if ((upper.includes("DEMOCRACIA") && upper.includes("CRISTIANA")) || upper === "DC") return "DC"
   if (upper.includes("COMUNISTA") || upper === "PC") return "PC"
   if (upper.includes("INDEPENDIENTE")) return "IND"
-  if (upper.includes("REPUBLICANO")) return "Republicanos"
+  // "REPUBLICANO" omitido: partido fundado 2019, no aplica en dataset 2002-2018
 
   return trimmed
 }

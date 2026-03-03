@@ -39,7 +39,8 @@ export interface Diputado {
   coalicion_normalizada?: string | null
   bancada_comite_normalizado?: string | null
   // Periodo legislativo (2002-2006, 2006-2010, etc.)
-  periodo_legislativo?: string | null
+  periodo?: string | null
+  periodo_legislativo?: string | null  // Alias legacy (no existe en BD)
 }
 
 /** Resultados del análisis NLP */
