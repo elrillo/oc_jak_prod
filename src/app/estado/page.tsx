@@ -153,7 +153,7 @@ function EstadoContent() {
       {/* Barra 100% apilada de etapas */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center my-12">
         <div className="lg:col-span-2">
-          <h3 className="text-2xl font-serif font-semibold mb-4">Avance Legislativo</h3>
+          <h3 className="text-2xl font-serif font-semibold mb-4">Embudo de Progreso Legislativo</h3>
           <p className="text-muted-foreground leading-relaxed text-justify">
             Distribución de los {data.jakMociones.length} proyectos según su estado de tramitación actual.
           </p>
@@ -197,7 +197,7 @@ function EstadoContent() {
       <div className="border-t border-white/5 my-12" />
 
       {/* Tabla de progreso legislativo */}
-      <h3 className="font-serif text-xl mb-2 text-center">Progreso por Estado</h3>
+      <h3 className="font-serif text-xl mb-2 text-center">Hitos de Tramitación</h3>
       <p className="text-muted-foreground text-sm text-center mb-6">
         Avance de cada proyecto en los estados del proceso legislativo.
       </p>

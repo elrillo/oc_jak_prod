@@ -187,7 +187,8 @@ export function BoletinCard({
               </span>
             </div>
           )}
-          {mocion.publicado_en_diario_oficial && (
+          {mocion.publicado_en_diario_oficial &&
+           mocion.publicado_en_diario_oficial.toLowerCase() !== "n/a" && (
             <div>
               <span className="text-white/30 text-xs uppercase tracking-wider block mb-0.5">Publicado</span>
               <span className="text-[#5bc2ba]">{formatDateHuman(mocion.publicado_en_diario_oficial)}</span>

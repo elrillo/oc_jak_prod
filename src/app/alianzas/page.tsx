@@ -41,10 +41,12 @@ function AlianzasContent() {
     const allAllies = Object.values(allyMap).sort((a, b) => b.count - a.count)
     const topAllies = allAllies.slice(0, 20)
 
-    // Agrupar por partido
+    // Agrupar coautorías por partido (per-record, usando el partido del periodo del boletín)
     const partyAgg: Record<string, number> = {}
-    for (const a of allAllies) {
-      partyAgg[a.partido] = (partyAgg[a.partido] || 0) + a.count
+    for (const c of jakCoauthors) {
+      const periodo = boletinPeriodo.get(c.n_boletin) || ''
+      const party = normalizeParty(getPartyForDeputy(dipMap, c, periodo) || null)
+      partyAgg[party] = (partyAgg[party] || 0) + 1
     }
     const partyData = Object.entries(partyAgg)
       .map(([name, count]) => ({ name, count, fill: getPartyColor(name) }))
@@ -227,7 +229,7 @@ function AlianzasContent() {
       {/* Grafo de red — full-width */}
       <div className="my-12">
         <h3 className="text-2xl font-serif font-semibold mb-3 text-center">Mapa de Alianzas</h3>
-        <p className="text-muted-foreground text-sm text-center mb-2 max-w-2xl mx-auto">
+        <p className="text-muted-foreground text-sm text-justify mb-2 max-w-2xl mx-auto">
           Red de coautorías legislativas. El nodo central es Kast, los medianos son partidos y los menores son diputados individuales. El tamaño de cada nodo es proporcional al número de proyectos firmados en conjunto.
         </p>
         <p className="text-muted-foreground text-xs text-center mb-6">
@@ -254,7 +256,7 @@ function AlianzasContent() {
           title="Alianzas Inesperadas"
           description={
             allianceInsights.crossPartyAllies.length > 0
-              ? `Kast colaboró con diputados de la oposición: ${allianceInsights.crossPartyAllies.map(a => `${a.diputado.split(" ").slice(0, 2).join(" ")} (${a.partido}, ${a.count})`).join("; ")}. Estas alianzas transversales sugieren acuerdos puntuales en temas específicos.`
+              ? `Kast colaboró con diputados de la oposición: ${allianceInsights.crossPartyAllies.map(a => `${a.diputado.split(" ").slice(0, 3).join(" ")} (${a.partido}, ${a.count})`).join("; ")}. Estas alianzas transversales sugieren acuerdos puntuales en temas específicos.`
               : "Se identificaron colaboraciones esporádicas con diputados de distintos sectores políticos."
           }
         />

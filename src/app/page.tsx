@@ -6,7 +6,7 @@ import { KpiCard } from "@/components/KpiCard"
 import { PageHeader } from "@/components/PageHeader"
 import { StorySection } from "@/components/StorySection"
 import { EChart } from "@/components/EChart"
-import { valueCounts, PERIODOS, categorizeCommission, getStatusOrder, getPeriod, getStatusColor } from "@/lib/legislative"
+import { valueCounts, PERIODOS, categorizeCommission, getStatusOrder, getPeriod, getStatusColor, mapStageNumeric, mapStageLabel } from "@/lib/legislative"
 import { buildDipMap, getPartyForDeputy } from "@/lib/queries"
 import { normalizeParty, getPartyColor, PARTY_COLORS } from "@/lib/parties"
 import { InsightCard } from "@/components/InsightCard"
@@ -19,10 +19,23 @@ function GeneralContent() {
 
   const { jakMociones, jakBoletinIds, foundName, total, leyesCount, tasaExito, promedioAnual, topAlly } = data
 
-  // Estado de proyectos (donut) — orden cronológico
-  const statusCounts = valueCounts(
-    jakMociones.map(m => m.estado_del_proyecto_de_ley).filter(Boolean)
-  ).slice(0, 8).sort((a, b) => getStatusOrder(a.name) - getStatusOrder(b.name))
+  // Estado de proyectos (donut) — categorías procesadas, merge 3er Trámite + Ley → "Ley"
+  const statusCounts = (() => {
+    const raw = valueCounts(
+      jakMociones.map(m => mapStageLabel(mapStageNumeric(m.etapa_del_proyecto, m.estado_del_proyecto_de_ley)))
+    )
+    const merged: { name: string; count: number }[] = []
+    let leyCount = 0
+    for (const s of raw) {
+      if (s.name === "Tercer Trámite / Mixta" || s.name === "Tramitación Terminada / Ley") {
+        leyCount += s.count
+      } else {
+        merged.push(s)
+      }
+    }
+    if (leyCount > 0) merged.push({ name: "Ley", count: leyCount })
+    return merged.sort((a, b) => getStatusOrder(a.name) - getStatusOrder(b.name))
+  })()
 
   // Temáticas (barras horizontales) — usa tematica_asociada con fallback
   const comisionCounts = valueCounts(
@@ -67,7 +80,7 @@ function GeneralContent() {
         const anyCoautoria = coautores.find(c => c.diputado === name && jakSet.has(c.n_boletin))
         const periodo = anyCoautoria ? boletinPeriodo.get(anyCoautoria.n_boletin) || '' : ''
         const party = normalizeParty(getPartyForDeputy(dipMap, { n_boletin: '', diputado: name }, periodo) || null)
-        return { name: name.split(" ").slice(0, 2).join(" "), count, fullName: name, party }
+        return { name: name.split(" ").slice(0, 3).join(" "), count, fullName: name, party }
       })
 
     const topParties = Object.entries(partyCounts)
@@ -112,11 +125,20 @@ function GeneralContent() {
       .slice(0, 3)
 
     const crossPartyText = crossPartyAllies.length > 0
-      ? `Kast firmó mociones con ${crossPartyAllies.map(a => `${a.name.split(" ").slice(0, 2).join(" ")} (${a.party}, ${a.count} veces)`).join(", ")}, evidenciando alianzas que trascienden el espectro ideológico.`
+      ? `Kast firmó mociones con ${crossPartyAllies.map(a => `${a.name.split(" ").slice(0, 3).join(" ")} (${a.party}, ${a.count} veces)`).join(", ")}, evidenciando alianzas que trascienden el espectro ideológico.`
       : "Se detectaron colaboraciones transversales con diputados de distintos sectores políticos."
 
     return { peakYear, peakPeriod, nationalPct, regionalCount, crossPartyText }
   }, [jakMociones, yearCounts, total, coautores, jakBoletinIds, foundName, dipMap, boletinPeriodo])
+
+  // --- Datos para descripciones enriquecidas ---
+  const topStatus = statusCounts.reduce((max, s) => s.count > max.count ? s : max, statusCounts[0] || { name: '—', count: 0 })
+  const topStatusPct = total > 0 ? (topStatus.count / total * 100).toFixed(1) : '0'
+  const topTema = comisionCounts[0] || { name: '—', count: 0 }
+  const topTemaPct = total > 0 ? (topTema.count / total * 100).toFixed(1) : '0'
+  const top3TemaPct = total > 0 ? (comisionCounts.slice(0, 3).reduce((s, c) => s + c.count, 0) / total * 100).toFixed(1) : '0'
+  const bestPeriod = periodCounts.reduce((max, p) => p.count > max.count ? p : max, periodCounts[0] || { name: '—', count: 0 })
+  const bestPeriodPct = total > 0 ? (bestPeriod.count / total * 100).toFixed(1) : '0'
 
   // --- ECharts Options ---
 
@@ -275,7 +297,7 @@ function GeneralContent() {
         <KpiCard title="Iniciativas Presentadas" value={total} subtitle="Carrera parlamentaria" />
         <KpiCard title="Aprobados / Terminados" value={leyesCount} subtitle={`Tasa: ${tasaExito.toFixed(1)}%`} />
         <KpiCard title="Promedio Anual" value={promedioAnual} subtitle="Mociones por año" />
-        <KpiCard title="Aliado Histórico" value={topAlly.split(" ").slice(0, 2).join(" ")} subtitle="Mayor colaborador" />
+        <KpiCard title="Aliado Histórico" value={topAlly.split(" ").slice(0, 3).join(" ")} subtitle="Mayor colaborador" />
       </div>
 
       {/* Hallazgos EDA */}
@@ -301,10 +323,10 @@ function GeneralContent() {
 
       <div className="border-t border-white/5 my-12" />
 
-      {/* Sección 1: Estado de la Gestión */}
+      {/* Sección 1: Estado Actual de Tramitación */}
       <StorySection
-        title="Estado de la Gestión"
-        description={`De las ${total} mociones presentadas, ${leyesCount} completaron su tramitación (${tasaExito.toFixed(1)}%). El gráfico muestra la distribución por estado actual.`}
+        title="Estado Actual de Tramitación"
+        description={`De las ${total} mociones, ${topStatus.count} (${topStatusPct}%) se clasifican como "${topStatus.name}". Solo ${leyesCount} completaron su tramitación y se convirtieron en ley (${tasaExito.toFixed(1)}% de éxito).`}
         chart={<EChart option={donutOption} style={{ height: '380px' }} />}
         textLeft
       />
@@ -312,7 +334,7 @@ function GeneralContent() {
       {/* Sección 2: Áreas de Influencia */}
       <StorySection
         title="Áreas de Influencia"
-        description={`Las 10 temáticas con mayor cantidad de proyectos ingresados. La clasificación se basa en la comisión que recibió cada moción.`}
+        description={`La temática principal fue "${topTema.name}" con ${topTema.count} proyectos (${topTemaPct}%). Las 3 áreas más legisladas concentran el ${top3TemaPct}% del total de mociones ingresadas.`}
         chart={<EChart option={comisionOption} style={{ height: '420px' }} />}
         textLeft={false}
       />
@@ -320,7 +342,7 @@ function GeneralContent() {
       {/* Sección 3: Evolución Histórica por año */}
       <StorySection
         title="Evolución Histórica"
-        description={`Cantidad de mociones ingresadas por año entre 2002 y 2018.`}
+        description={`El año de mayor producción fue ${hallazgos.peakYear.name} con ${hallazgos.peakYear.count} mociones. El promedio fue de ${promedioAnual} proyectos anuales a lo largo de los 16 años de actividad parlamentaria.`}
         chart={<EChart option={yearOption} style={{ height: '320px' }} />}
         textLeft
       />
@@ -328,7 +350,7 @@ function GeneralContent() {
       {/* Sección 4: Evolución por Legislatura */}
       <StorySection
         title="Producción por Legislatura"
-        description={`Total de mociones agrupadas por periodo legislativo. Cada periodo corresponde a cuatro años parlamentarios.`}
+        description={`El periodo más productivo fue ${bestPeriod.name} con ${bestPeriod.count} mociones (${bestPeriodPct}% del total). Cada columna representa un mandato de 4 años parlamentarios.`}
         chart={<EChart option={periodOption} style={{ height: '320px' }} />}
         textLeft={false}
       />

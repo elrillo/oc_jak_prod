@@ -119,9 +119,9 @@ export const PERIODOS = [
  * Portada de format_date_human() en app.py línea 378.
  */
 export function formatDateHuman(val: string | null): string {
-  if (!val) return "N/A"
+  if (!val) return "No Aplica"
   const date = new Date(val)
-  if (isNaN(date.getTime())) return "N/A"
+  if (isNaN(date.getTime())) return "No Aplica"
 
   const day = String(date.getDate()).padStart(2, "0")
   const month = String(date.getMonth() + 1).padStart(2, "0")

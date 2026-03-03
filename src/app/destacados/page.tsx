@@ -102,7 +102,7 @@ function DestacadosContent() {
         <div className="bg-[#141414]/80 backdrop-blur-sm border border-white/10 rounded-lg p-4 text-center">
           <p className="text-white/30 text-xs uppercase tracking-wider mb-1">Progreso Promedio</p>
           <p className="font-serif text-2xl font-bold">{Math.round((avgProgress / 4) * 100)}%</p>
-          <p className="text-white/40 text-xs">escala 0-4</p>
+          <p className="text-white/40 text-xs">en escala legislativa</p>
         </div>
         <div className="bg-[#141414]/80 backdrop-blur-sm border border-white/10 rounded-lg p-4 text-center">
           <p className="text-white/30 text-xs uppercase tracking-wider mb-1">Temáticas</p>
