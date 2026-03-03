@@ -53,6 +53,21 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 })(window,document,'script','dataLayer','GTM-TGX4SGVS');`,
         }}
       />
+      {/* Google Analytics GA4 */}
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=G-JPFZEFXWKZ"
+        strategy="afterInteractive"
+      />
+      <Script
+        id="ga4-config"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JPFZEFXWKZ');`,
+        }}
+      />
       <body
         className={`${playfair.variable} ${merriweather.variable} antialiased min-h-screen`}
       >
