@@ -144,6 +144,20 @@ export function getStatusOrder(status: string): number {
 }
 
 /**
+ * Colores semánticos por estado legislativo.
+ * Consistentes en todas las visualizaciones (donuts, barras, tablas).
+ */
+export function getStatusColor(status: string): string {
+  const s = status.toLowerCase()
+  if (s.includes("archivado") || s.includes("retirado")) return "#95a5a6"
+  if (s.includes("primer") || s.includes("1er") || s.includes("en tramitación")) return "#eda744"
+  if (s.includes("segundo") || s.includes("2do")) return "#3498db"
+  if (s.includes("tercer") || s.includes("3er") || s.includes("mixta")) return "#6e20d3"
+  if (s.includes("publicado") || s.includes("ley") || s.includes("terminada") || s.includes("aprobado")) return "#5bc2ba"
+  return "#555"
+}
+
+/**
  * Cuenta las frecuencias de valores en un array de strings.
  * Equivalente a pandas value_counts().
  */

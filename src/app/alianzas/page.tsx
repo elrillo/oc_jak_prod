@@ -185,7 +185,10 @@ function AlianzasContent() {
     if (!selectedAlly || !data) return null
 
     const dipMap = buildDipMap(diputados)
-    const party = normalizeParty(getPartyForDeputy(dipMap, { n_boletin: '', diputado: selectedAlly }, undefined) || null)
+    const boletinPeriodoLocal = new Map(data.jakMociones.map(m => [m.n_boletin, m.periodo || '']))
+    const anyCoautoria = coautores.find(c => c.diputado === selectedAlly && new Set(data.jakBoletinIds).has(c.n_boletin))
+    const periodo = anyCoautoria ? boletinPeriodoLocal.get(anyCoautoria.n_boletin) || '' : ''
+    const party = normalizeParty(getPartyForDeputy(dipMap, { n_boletin: '', diputado: selectedAlly }, periodo) || null)
     const allyInfo = networkData.allAllies.find(a => a.diputado === selectedAlly)
 
     // Buscar boletines donde tanto JAK como el aliado son coautores

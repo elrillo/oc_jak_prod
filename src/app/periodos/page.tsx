@@ -6,7 +6,7 @@ import { KpiCard } from "@/components/KpiCard"
 import { PageHeader } from "@/components/PageHeader"
 import { StorySection } from "@/components/StorySection"
 import { EChart } from "@/components/EChart"
-import { PERIODOS, SUCCESS_PATTERN, categorizeCommission, valueCounts, getStatusOrder } from "@/lib/legislative"
+import { PERIODOS, SUCCESS_PATTERN, categorizeCommission, valueCounts, getStatusOrder, getStatusColor } from "@/lib/legislative"
 import { InsightCard } from "@/components/InsightCard"
 
 const COLORS = ["#6e20d3", "#5bc2ba", "#3498db", "#eda744", "#e8627c", "#1abc9c", "#e67e22", "#95a5a6"]
@@ -42,7 +42,7 @@ function PeriodosContent() {
       type: 'pie',
       radius: ['40%', '70%'],
       center: ['50%', '42%'],
-      data: statusCounts.map((s, i) => ({ value: s.count, name: s.name, itemStyle: { color: COLORS[i % COLORS.length] } })),
+      data: statusCounts.map(s => ({ value: s.count, name: s.name, itemStyle: { color: getStatusColor(s.name) } })),
       label: { show: false },
       emphasis: { label: { show: true, fontSize: 13, fontWeight: 'bold' as const, color: '#fff' } },
     }],
@@ -55,9 +55,9 @@ function PeriodosContent() {
       data: themeCounts.map((t, i) => ({ name: t.name, value: t.count, itemStyle: { color: COLORS[i % COLORS.length] } })),
       label: { show: true, color: '#fff', fontSize: 12, formatter: '{b}\n{c}' },
       breadcrumb: { show: false },
-      itemStyle: { borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, gapWidth: 1 },
+      itemStyle: { borderColor: 'transparent', borderWidth: 0, gapWidth: 2 },
       levels: [{
-        itemStyle: { borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, gapWidth: 1 },
+        itemStyle: { borderColor: 'transparent', borderWidth: 0, gapWidth: 2 },
       }],
     }],
   }

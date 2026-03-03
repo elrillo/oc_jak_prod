@@ -6,7 +6,7 @@ import { KpiCard } from "@/components/KpiCard"
 import { PageHeader } from "@/components/PageHeader"
 import { StorySection } from "@/components/StorySection"
 import { EChart } from "@/components/EChart"
-import { valueCounts, PERIODOS, categorizeCommission, getStatusOrder, getPeriod } from "@/lib/legislative"
+import { valueCounts, PERIODOS, categorizeCommission, getStatusOrder, getPeriod, getStatusColor } from "@/lib/legislative"
 import { buildDipMap, getPartyForDeputy } from "@/lib/queries"
 import { normalizeParty, getPartyColor, PARTY_COLORS } from "@/lib/parties"
 import { InsightCard } from "@/components/InsightCard"
@@ -63,7 +63,12 @@ function GeneralContent() {
     const topAllies = Object.entries(allyCounts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([name, count]) => ({ name: name.split(" ").slice(0, 2).join(" "), count, fullName: name }))
+      .map(([name, count]) => {
+        const anyCoautoria = coautores.find(c => c.diputado === name && jakSet.has(c.n_boletin))
+        const periodo = anyCoautoria ? boletinPeriodo.get(anyCoautoria.n_boletin) || '' : ''
+        const party = normalizeParty(getPartyForDeputy(dipMap, { n_boletin: '', diputado: name }, periodo) || null)
+        return { name: name.split(" ").slice(0, 2).join(" "), count, fullName: name, party }
+      })
 
     const topParties = Object.entries(partyCounts)
       .sort((a, b) => b[1] - a[1])
@@ -127,10 +132,10 @@ function GeneralContent() {
       type: 'pie',
       radius: ['45%', '75%'],
       center: ['40%', '50%'],
-      data: statusCounts.map((s, i) => ({
+      data: statusCounts.map(s => ({
         value: s.count,
         name: s.name,
-        itemStyle: { color: COLORS[i % COLORS.length] },
+        itemStyle: { color: getStatusColor(s.name) },
       })),
       label: { show: false },
       emphasis: {
@@ -228,7 +233,7 @@ function GeneralContent() {
       data: [...topAllies].reverse().map(a => ({
         value: a.count,
         itemStyle: {
-          color: getPartyColor(normalizeParty(getPartyForDeputy(dipMap, { n_boletin: '', diputado: a.fullName }, undefined) || null)),
+          color: getPartyColor(a.party),
           borderRadius: [0, 4, 4, 0],
         },
       })),

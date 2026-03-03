@@ -64,8 +64,8 @@ export const observatorioTheme = {
   },
   pie: {
     itemStyle: {
-      borderColor: '#0c0d0e',
-      borderWidth: 2,
+      borderColor: 'transparent',
+      borderWidth: 3,
     },
   },
   graph: {

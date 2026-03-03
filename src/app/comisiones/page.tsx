@@ -50,9 +50,9 @@ function ComisionesContent() {
       data: themeCounts.map((t, i) => ({ name: t.name, value: t.count, itemStyle: { color: COLORS[i % COLORS.length] } })),
       label: { show: true, color: '#fff', fontSize: 12, formatter: '{b}\n{c}' },
       breadcrumb: { show: false },
-      itemStyle: { borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, gapWidth: 1 },
+      itemStyle: { borderColor: 'transparent', borderWidth: 0, gapWidth: 2 },
       levels: [{
-        itemStyle: { borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, gapWidth: 1 },
+        itemStyle: { borderColor: 'transparent', borderWidth: 0, gapWidth: 2 },
       }],
     }],
   }

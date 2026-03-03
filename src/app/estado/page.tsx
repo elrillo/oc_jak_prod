@@ -10,10 +10,10 @@ import { mapStageNumeric, mapStageLabel, valueCounts, categorizeCommission, SUCC
 import { InsightCard } from "@/components/InsightCard"
 
 const STAGE_COLORS: Record<number, string> = {
-  0: "#6e20d3",
+  0: "#95a5a6",
   1: "#eda744",
-  2: "#eda744",
-  3: "#3498db",
+  2: "#3498db",
+  3: "#5bc2ba",
   4: "#5bc2ba",
 }
 
@@ -155,7 +155,7 @@ function EstadoContent() {
         <div className="lg:col-span-2">
           <h3 className="text-2xl font-serif font-semibold mb-4">Avance Legislativo</h3>
           <p className="text-muted-foreground leading-relaxed text-justify">
-            Distribución de los {data.jakMociones.length} proyectos según su etapa de tramitación actual.
+            Distribución de los {data.jakMociones.length} proyectos según su estado de tramitación actual.
           </p>
         </div>
         <div className="lg:col-span-3">
@@ -197,9 +197,9 @@ function EstadoContent() {
       <div className="border-t border-white/5 my-12" />
 
       {/* Tabla de progreso legislativo */}
-      <h3 className="font-serif text-xl mb-2 text-center">Progreso por Etapa</h3>
+      <h3 className="font-serif text-xl mb-2 text-center">Progreso por Estado</h3>
       <p className="text-muted-foreground text-sm text-center mb-6">
-        Avance de cada proyecto en las etapas del proceso legislativo.
+        Avance de cada proyecto en los estados del proceso legislativo.
       </p>
 
       <div className="overflow-x-auto mb-12 bg-[#141414]/60 backdrop-blur-sm border border-white/5 rounded-xl">
@@ -267,7 +267,7 @@ function EstadoContent() {
           />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1 block">Etapa</label>
+          <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1 block">Estado</label>
           <select
             value={filterStage === null ? "" : String(filterStage)}
             onChange={e => { setFilterStage(e.target.value === "" ? null : Number(e.target.value)); setPage(0) }}
