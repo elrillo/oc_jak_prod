@@ -144,7 +144,7 @@ gtag('config', 'G-JPFZEFXWKZ');`,
                   </a>
                 ))}
               </div>
-              <a href="#" className="inline-block bg-white text-black px-5 py-2.5 rounded-full text-sm font-bold hover:bg-gray-200 transition-colors">
+              <a href="https://observatoriocongreso.cl/newsletter/" className="inline-block bg-white text-black px-5 py-2.5 rounded-full text-sm font-bold hover:bg-gray-200 transition-colors">
                 Suscribirse al Bolet&iacute;n
               </a>
             </div>
