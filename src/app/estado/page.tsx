@@ -13,7 +13,7 @@ const STAGE_COLORS: Record<number, string> = {
   0: "#95a5a6",
   1: "#eda744",
   2: "#3498db",
-  3: "#5bc2ba",
+  3: "#6e20d3",
   4: "#5bc2ba",
 }
 
@@ -44,8 +44,8 @@ function EstadoContent() {
       { name: "Archivado", count: 127 },
       { name: "Primer Trámite", count: 97 },
       { name: "Segundo Trámite", count: 11 },
-      { name: "Tramitación Terminada", count: 19 },
-      { name: "Tercer Trámite", count: 1 }
+      { name: "Tercer Trámite", count: 1 },
+      { name: "Tramitación Terminada", count: 19 }
     ].filter(s => s.count > 0)
 
     return { stages, withStage }
@@ -195,63 +195,7 @@ function EstadoContent() {
         )
       })()}
 
-      <div className="border-t border-white/5 my-12" />
 
-      {/* Tabla de progreso legislativo */}
-      <h3 className="font-serif text-xl mb-2 text-center">Hitos de Tramitación</h3>
-      <p className="text-muted-foreground text-sm text-center mb-6">
-        Avance de cada proyecto en los estados del proceso legislativo.
-      </p>
-
-      <div className="overflow-x-auto mb-12 bg-[#141414]/60 backdrop-blur-sm border border-white/5 rounded-xl">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-white/10 text-muted-foreground uppercase text-xs tracking-wider">
-              <th className="py-3 px-3 text-left sticky left-0 bg-[#141414]/90 backdrop-blur-sm z-10">Boletín</th>
-              <th className="py-3 px-3 text-left min-w-[200px]">Nombre</th>
-              <th className="py-3 px-2 text-center whitespace-nowrap">1er Trámite</th>
-              <th className="py-3 px-2 text-center whitespace-nowrap">2do Trámite</th>
-              <th className="py-3 px-2 text-center whitespace-nowrap">3er Trámite</th>
-              <th className="py-3 px-2 text-center">Ley</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedByProgress.slice(0, 50).map(m => {
-              const v = m.progressVal
-              const isArchived = v === 0
-              return (
-                <tr key={m.n_boletin} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                  <td className="py-2 px-3 text-[#6e20d3] font-mono text-xs whitespace-nowrap sticky left-0 bg-[#141414]/90 backdrop-blur-sm z-10">
-                    {m.n_boletin}
-                  </td>
-                  <td className="py-2 px-3 text-white/70 text-xs text-wrap" title={m.nombre_iniciativa}>
-                    {m.nombre_iniciativa}
-                  </td>
-                  <td className="py-2 px-2 text-center">
-                    {isArchived ? <span className="text-white/20">&mdash;</span> : v >= 1 ? <span className="text-[#5bc2ba] font-bold">&#10003;</span> : <span className="text-white/10">&#9675;</span>}
-                  </td>
-                  <td className="py-2 px-2 text-center">
-                    {isArchived ? <span className="text-white/20">&mdash;</span> : v >= 2 ? <span className="text-[#5bc2ba] font-bold">&#10003;</span> : <span className="text-white/10">&#9675;</span>}
-                  </td>
-                  <td className="py-2 px-2 text-center">
-                    {isArchived ? <span className="text-white/20">&mdash;</span> : v >= 3 ? <span className="text-[#5bc2ba] font-bold">&#10003;</span> : <span className="text-white/10">&#9675;</span>}
-                  </td>
-                  <td className="py-2 px-2 text-center">
-                    {isArchived ? <span className="text-white/20">&mdash;</span> : v >= 4 ? <span className="text-[#5bc2ba] font-bold">&#10003;</span> : <span className="text-white/10">&#9675;</span>}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-        {sortedByProgress.length > 50 && (
-          <p className="text-muted-foreground text-xs text-center py-3">
-            Mostrando los primeros 50 de {sortedByProgress.length} proyectos.
-          </p>
-        )}
-      </div>
-
-      <div className="border-t border-white/5 my-12" />
 
       {/* Rastreador con BoletinCards paginado + filtros */}
       <h3 className="font-serif text-xl mb-2 text-center">Rastreador de Proyectos</h3>
