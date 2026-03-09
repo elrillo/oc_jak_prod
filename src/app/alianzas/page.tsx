@@ -211,21 +211,7 @@ function AlianzasContent() {
         subtitle="Coautorías legislativas de José Antonio Kast entre 2002 y 2018."
       />
 
-      {/* Grafo de red Partidos */}
-      <div className="my-12">
-        <h3 className="text-2xl font-serif font-semibold mb-3 text-center">Red Kast - Partidos</h3>
-        <p className="text-muted-foreground text-sm text-center mb-6 max-w-2xl mx-auto">
-          Grafo de coautorías agrupadas por partido. El tamaño del nodo refleja el volumen de proyectos.
-        </p>
-        <div className="bg-[#141414]/60 backdrop-blur-sm border border-white/5 rounded-xl p-4">
-          <EChart
-            option={networkData.partyGraphOption}
-            style={{ height: "500px" }}
-          />
-        </div>
-      </div>
 
-      <div className="border-t border-white/5 my-12" />
 
       {/* Grafo de red Diputados */}
       <div className="my-12">
