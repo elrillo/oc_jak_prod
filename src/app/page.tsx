@@ -105,28 +105,7 @@ function GeneralContent() {
     }).length
     const nationalPct = total > 0 ? Math.round(((total - regionalCount) / total) * 100) : 0
 
-    // Alianzas transversales: aliados de partidos de izquierda/centro-izq
-    const OPPOSITE_PARTIES = ["PC", "PS", "PPD", "PRSD", "FA"]
-    const crossPartyAllies = Object.entries(
-      coautores.reduce<Record<string, { name: string; party: string; count: number }>>((acc, c) => {
-        if (!new Set(jakBoletinIds).has(c.n_boletin) || c.diputado === foundName) return acc
-        const periodo = boletinPeriodo.get(c.n_boletin) || ''
-        const party = normalizeParty(getPartyForDeputy(dipMap, c, periodo) || null)
-        if (OPPOSITE_PARTIES.includes(party)) {
-          if (!acc[c.diputado]) acc[c.diputado] = { name: c.diputado, party, count: 0 }
-          acc[c.diputado].count++
-        }
-        return acc
-      }, {})
-    )
-      .map(([, v]) => v)
-      .filter(a => a.count >= 2)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3)
-
-    const crossPartyText = crossPartyAllies.length > 0
-      ? `Kast firmó mociones con ${crossPartyAllies.map(a => `${a.name.split(" ").slice(0, 3).join(" ")} (${a.party}, ${a.count} veces)`).join(", ")}, evidenciando alianzas que trascienden el espectro ideológico.`
-      : "Se detectaron colaboraciones transversales con diputados de distintos sectores políticos."
+    const crossPartyText = "Durante su periodo como diputado, José Antonio Kast presentó diversas mociones parlamentarias junto a miembros de partidos de centroizquierda, centro e izquierda. Los representantes con mayor número de mociones conjuntas son: Jorge Sabag (DC, 34 coautorías); Carlos Olivares (DC, 21 coautorías), José Pérez Arriagada (PRSD, 16 coautorías), Tucapel Jiménez (Ind, 9 coautorías) y Fernando Meza (PRSD, 6 coautorías)."
 
     return { peakYear, peakPeriod, nationalPct, regionalCount, crossPartyText }
   }, [jakMociones, yearCounts, total, coautores, jakBoletinIds, foundName, dipMap, boletinPeriodo])

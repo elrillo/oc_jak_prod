@@ -154,7 +154,7 @@ function ComisionesContent() {
                 {filtered.sort((a, b) => (b.fecha_de_ingreso || "").localeCompare(a.fecha_de_ingreso || "")).map(m => (
                   <tr key={m.n_boletin} className="border-b border-white/5 hover:bg-white/5">
                     <td className="py-2 px-2 text-[#6e20d3] font-mono text-xs">{m.n_boletin}</td>
-                    <td className="py-2 px-2">{m.nombre_iniciativa?.slice(0, 70)}{(m.nombre_iniciativa?.length || 0) > 70 ? "..." : ""}</td>
+                    <td className="py-2 px-2 text-wrap">{m.nombre_iniciativa}</td>
                     <td className="py-2 px-2 text-muted-foreground text-xs">{m.estado_del_proyecto_de_ley}</td>
                     <td className="py-2 px-2 text-muted-foreground text-xs">{m.comision_inicial}</td>
                   </tr>

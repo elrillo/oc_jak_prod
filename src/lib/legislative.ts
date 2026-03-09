@@ -78,7 +78,7 @@ export function mapStageLabel(val: number): string {
     case 3: return "Tercer Trámite / Mixta"
     case 2: return "Segundo Trámite"
     case 1: return "Primer Trámite"
-    case 0: return "Archivado / Retirado"
+    case 0: return "Archivado"
     default: return "Desconocido"
   }
 }

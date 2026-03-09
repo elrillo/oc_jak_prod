@@ -16,7 +16,7 @@ function AlianzasContent() {
 
   const networkData = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (!data) return { partyData: [] as { name: string; count: number; fill: string }[], topAllies: [] as { diputado: string; partido: string; count: number }[], allAllies: [] as { diputado: string; partido: string; count: number }[], graphOption: {} as any }
+    if (!data) return { partyData: [] as { name: string; count: number; fill: string }[], topAllies: [] as { diputado: string; partido: string; count: number }[], allAllies: [] as { diputado: string; partido: string; count: number }[], partyGraphOption: {} as any, deputyGraphOption: {} as any }
 
     const jakCoauthors = getCoauthorsForBoletines(coautores, data.jakBoletinIds, data.foundName)
     const dipMap = buildDipMap(diputados)
@@ -53,122 +53,104 @@ function AlianzasContent() {
       .sort((a, b) => b.count - a.count)
 
     // --- Construir datos del grafo ECharts ---
-    const categories = [
-      { name: "JAK" },
-      { name: "Partidos" },
-      { name: "Diputados" },
-    ]
+    const baseForce = { repulsion: 500, gravity: 0.08, edgeLength: [100, 250], friction: 0.6 };
 
-    // Nodos
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const nodes: any[] = []
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const links: any[] = []
-
-    // Nodo central: JAK — color dorado, el más grande
-    nodes.push({
-      name: "José Antonio Kast",
-      symbolSize: 80,
-      category: 0,
-      itemStyle: { color: "#eda744" },
-      label: {
-        show: true,
-        fontSize: 15,
-        fontFamily: "Playfair Display, serif",
-        fontWeight: "bold",
-        color: "#ffffff",
+    // Partidos Graph
+    const partyNodes = [
+      {
+        name: "JOSE ANTONIO KAST RIST",
+        symbolSize: 80,
+        category: 0,
+        itemStyle: { color: "#eda744" },
+        label: { show: true, fontSize: 13, fontFamily: "Playfair Display, serif", fontWeight: "bold", color: "#ffffff" },
       },
-    })
-
-    // Nodos de partidos + edges JAK → Partido
-    const maxPartyCount = Math.max(...partyData.map(p => p.count), 1)
-    for (const p of partyData) {
-      const sz = 25 + (p.count / maxPartyCount) * 25
-      nodes.push({
+      ...partyData.map(p => ({
         name: p.name,
-        symbolSize: Math.round(sz),
+        symbolSize: Math.round(25 + (p.count / Math.max(...partyData.map(x => x.count), 1)) * 25),
         category: 1,
         itemStyle: { color: PARTY_COLORS[p.name] || "#95A5A6" },
-        label: {
-          show: true,
-          fontSize: 12,
-          color: PARTY_COLORS[p.name] || "#95A5A6",
-        },
+        label: { show: true, fontSize: 12, color: PARTY_COLORS[p.name] || "#95A5A6" },
         value: p.count,
-      })
-      links.push({
-        source: "José Antonio Kast",
-        target: p.name,
-        lineStyle: { width: 2, curveness: 0.1, color: "rgba(255,255,255,0.15)" },
-      })
-    }
+      })),
+    ];
 
-    // Nodos de TODOS los diputados + edges Partido → Diputado
-    const maxDepCount = Math.max(...allAllies.map(a => a.count), 1)
-    for (const dep of allAllies) {
-      const sz = 5 + (dep.count / maxDepCount) * 15
-      nodes.push({
-        name: dep.diputado,
-        symbolSize: Math.round(sz),
-        category: 2,
-        itemStyle: { color: (PARTY_COLORS[dep.partido] || "#95A5A6") + "CC" },
-        label: {
-          show: dep.count >= 5,
-          fontSize: 9,
-          color: "#b0b0b0",
-        },
-        value: dep.count,
-      })
-      links.push({
-        source: dep.partido,
-        target: dep.diputado,
-        lineStyle: { width: 0.5, color: "#444", curveness: 0.2 },
-      })
-    }
+    const partyLinks = partyData.map(p => ({
+      source: "JOSE ANTONIO KAST RIST",
+      target: p.name,
+      lineStyle: { width: 2, curveness: 0.1, color: "rgba(255,255,255,0.15)" },
+    }));
 
-    const graphOption = {
+    const partyGraphOption = {
       tooltip: {
         trigger: "item" as const,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         formatter: (params: any) => {
           if (params.dataType === "node") {
-            const cat = categories[params.data.category]?.name || ""
-            if (cat === "JAK") return `<strong>José Antonio Kast Rist</strong><br/>Nodo central`
-            if (cat === "Partidos") return `<strong>${params.name}</strong><br/>Partido<br/>${params.data.value} coautorías`
-            return `<strong>${params.name}</strong><br/>${params.data.value} proyectos`
+            if (params.name === "JOSE ANTONIO KAST RIST") return `<strong>JOSE ANTONIO KAST RIST</strong><br/>Nodo central`;
+            return `<strong>${params.name}</strong><br/>Partido<br/>${params.data.value} proyectos`;
           }
-          return ""
+          return "";
         },
       },
       animationDuration: 1500,
       animationEasingUpdate: "quinticInOut" as const,
-      series: [
-        {
-          type: "graph",
-          layout: "force",
-          data: nodes,
-          links,
-          categories,
-          roam: true,
-          draggable: true,
-          force: {
-            repulsion: 500,
-            gravity: 0.08,
-            edgeLength: [100, 250],
-            friction: 0.6,
-          },
-          emphasis: {
-            focus: "adjacency",
-            lineStyle: { width: 3 },
-          },
-          lineStyle: {
-            opacity: 0.6,
-          },
-        },
-      ],
-    }
+      series: [{
+        type: "graph", layout: "force", data: partyNodes, links: partyLinks,
+        categories: [{ name: "JAK" }, { name: "Partidos" }],
+        roam: true, draggable: true, force: baseForce,
+        emphasis: { focus: "adjacency", lineStyle: { width: 3 } },
+        lineStyle: { opacity: 0.6 },
+      }],
+    };
 
-    return { partyData, topAllies, allAllies, graphOption }
+    // Diputados Graph
+    const maxDepCount = Math.max(...allAllies.map(a => a.count), 1);
+    const depNodes = [
+      {
+        name: "JOSE ANTONIO KAST RIST",
+        symbolSize: 80,
+        category: 0,
+        itemStyle: { color: "#eda744" },
+        label: { show: true, fontSize: 13, fontFamily: "Playfair Display, serif", fontWeight: "bold", color: "#ffffff" },
+      },
+      ...allAllies.map(dep => ({
+        name: dep.diputado,
+        symbolSize: Math.round(5 + (dep.count / maxDepCount) * 15),
+        category: 1,
+        itemStyle: { color: (PARTY_COLORS[dep.partido] || "#95A5A6") + "CC" },
+        label: { show: dep.count >= 5, fontSize: 9, color: "#b0b0b0" },
+        value: dep.count,
+      })),
+    ];
+
+    const depLinks = allAllies.map(dep => ({
+      source: "JOSE ANTONIO KAST RIST",
+      target: dep.diputado,
+      lineStyle: { width: 0.5, color: "#444", curveness: 0.2 },
+    }));
+
+    const deputyGraphOption = {
+      tooltip: {
+        trigger: "item" as const,
+        formatter: (params: any) => {
+          if (params.dataType === "node") {
+            if (params.name === "JOSE ANTONIO KAST RIST") return `<strong>JOSE ANTONIO KAST RIST</strong><br/>Nodo central`;
+            return `<strong>${params.name}</strong><br/>Diputado<br/>${params.data.value} proyectos`;
+          }
+          return "";
+        },
+      },
+      animationDuration: 1500,
+      animationEasingUpdate: "quinticInOut" as const,
+      series: [{
+        type: "graph", layout: "force", data: depNodes, links: depLinks,
+        categories: [{ name: "JAK" }, { name: "Diputados" }],
+        roam: true, draggable: true, force: baseForce,
+        emphasis: { focus: "adjacency", lineStyle: { width: 3 } },
+        lineStyle: { opacity: 0.6 },
+      }],
+    };
+
+    return { partyData, topAllies, allAllies, partyGraphOption, deputyGraphOption }
   }, [data, coautores, diputados])
 
   // Hallazgos EDA: concentración y alianzas inesperadas
@@ -226,19 +208,32 @@ function AlianzasContent() {
         subtitle="Coautorías legislativas de José Antonio Kast entre 2002 y 2018."
       />
 
-      {/* Grafo de red — full-width */}
+      {/* Grafo de red Partidos */}
       <div className="my-12">
-        <h3 className="text-2xl font-serif font-semibold mb-3 text-center">Mapa de Alianzas</h3>
-        <p className="text-muted-foreground text-sm text-justify mb-2 max-w-2xl mx-auto">
-          Red de coautorías legislativas. El nodo central es Kast, los medianos son partidos y los menores son diputados individuales. El tamaño de cada nodo es proporcional al número de proyectos firmados en conjunto.
-        </p>
-        <p className="text-muted-foreground text-xs text-center mb-6">
-          Usa el scroll para acercar o alejar. Arrastra los nodos para reorganizar.
+        <h3 className="text-2xl font-serif font-semibold mb-3 text-center">Red Kast - Partidos</h3>
+        <p className="text-muted-foreground text-sm text-center mb-6 max-w-2xl mx-auto">
+          Grafo de coautorías agrupadas por partido. El tamaño del nodo refleja el volumen de proyectos.
         </p>
         <div className="bg-[#141414]/60 backdrop-blur-sm border border-white/5 rounded-xl p-4">
           <EChart
-            option={networkData.graphOption}
-            style={{ height: "700px" }}
+            option={networkData.partyGraphOption}
+            style={{ height: "500px" }}
+          />
+        </div>
+      </div>
+
+      <div className="border-t border-white/5 my-12" />
+
+      {/* Grafo de red Diputados */}
+      <div className="my-12">
+        <h3 className="text-2xl font-serif font-semibold mb-3 text-center">Red Kast - Diputados</h3>
+        <p className="text-muted-foreground text-sm text-center mb-6 max-w-2xl mx-auto">
+          Grafo detallado de proyectos compartidos con cada diputado individual, coloreado según su pacto.
+        </p>
+        <div className="bg-[#141414]/60 backdrop-blur-sm border border-white/5 rounded-xl p-4">
+          <EChart
+            option={networkData.deputyGraphOption}
+            style={{ height: "600px" }}
           />
         </div>
       </div>
@@ -353,7 +348,7 @@ function AlianzasContent() {
                     {allyDetail.projects.map(p => (
                       <tr key={p.n_boletin} className="border-b border-white/5 hover:bg-white/5">
                         <td className="py-2 px-2 text-[#6e20d3] font-mono text-xs whitespace-nowrap">{p.n_boletin}</td>
-                        <td className="py-2 px-2 text-white/80 text-xs">{(p.nombre_iniciativa || "").slice(0, 100)}{(p.nombre_iniciativa || "").length > 100 ? "..." : ""}</td>
+                        <td className="py-2 px-2 text-white/80 text-xs text-wrap">{p.nombre_iniciativa}</td>
                         <td className="py-2 px-2 text-muted-foreground text-xs whitespace-nowrap">{formatDateHuman(p.fecha_de_ingreso)}</td>
                         <td className="py-2 px-2 text-muted-foreground text-xs">{p.estado_del_proyecto_de_ley}</td>
                       </tr>

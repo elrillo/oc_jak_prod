@@ -1,0 +1,26 @@
+--- TOP COAUTHORS ---
+                      diputado  cnt
+0       José Antonio Kast Rist  255
+1          Felipe Ward Edwards  102
+2   Javier Hernández Hernández   82
+3       Patricio Melero Abaroa   76
+4    María José Hoffmann Opazo   64
+5   Claudia Nogueira Fernández   63
+6        Gustavo Hasbún Selume   60
+7          Celso Morales Muñoz   56
+8       Iván Norambuena Farías   55
+9      Ignacio Urrutia Bonilla   50
+10         Javier Macaya Danús   49
+11         Marcelo Forni Lobos   47
+12        Ramón Barros Montero   46
+13     Gonzalo Uriarte Herrera   43
+14       Felipe Salaberry Soto   43
+15     Marisol Turres Figueroa   41
+16         Andrea Molina Oliva   40
+17     Rodrigo Álvarez Zenteno   39
+18     Marcela Cubillos Sigall   39
+19      Enrique Estay Peñaloza   39
+
+--- HUGO GUTIERREZ PROJECTS ---
+  id_boletin                                                                                                                                                                                                                        nombre_iniciativa
+0   10829-06  Modifica la ley N°20.880, sobre Probidad en la Función Pública y Prevención de los Conflictos de Intereses, para exigir que se informe si cónyuge y parientes del declarante ejercen algún cargo o función en la administración pública

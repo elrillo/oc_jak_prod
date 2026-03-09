@@ -7,7 +7,7 @@ import { KpiCard } from "@/components/KpiCard"
 import { EChart } from "@/components/EChart"
 import { BoletinCard } from "@/components/BoletinCard"
 import { getCoauthorsForBoletines, buildDipMap } from "@/lib/queries"
-import { SUCCESS_PATTERN, valueCounts } from "@/lib/legislative"
+import { SUCCESS_PATTERN, valueCounts, categorizeCommission } from "@/lib/legislative"
 import { InsightCard } from "@/components/InsightCard"
 
 function LeyesContent() {
@@ -70,7 +70,7 @@ function LeyesContent() {
 
   const leyesPorComision = useMemo(() => {
     return valueCounts(
-      leyes.map(m => m.comision_inicial || "Desconocida")
+      leyes.map(m => (m.tematica_asociada || categorizeCommission(m.comision_inicial)) || "Desconocida")
     ).slice(0, 10).reverse()
   }, [leyes])
 
