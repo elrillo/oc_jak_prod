@@ -44,8 +44,8 @@ function EstadoContent() {
       { name: "Archivado", count: 127 },
       { name: "Primer Trámite", count: 97 },
       { name: "Segundo Trámite", count: 11 },
-      { name: "Tramitación Terminada / Ley", count: 19 },
-      { name: "Tercer Trámite / Mixta", count: 1 }
+      { name: "Tramitación Terminada", count: 19 },
+      { name: "Tercer Trámite", count: 1 }
     ].filter(s => s.count > 0)
 
     return { stages, withStage }
@@ -83,21 +83,11 @@ function EstadoContent() {
       "Archivado": 0,
       "Primer Trámite": 1,
       "Segundo Trámite": 2,
-      "Tercer Trámite / Mixta": 3,
-      "Ley": 4,
+      "Tercer Trámite": 3,
+      "Tramitación Terminada": 4,
     }
 
-    // Merge "Tramitación Terminada / Ley" into "Ley", keep "Tercer Trámite / Mixta"
-    const mergedStages: { name: string; count: number }[] = []
-    let leyCount = 0
-    for (const s of stageData.stages) {
-      if (s.name === "Tramitación Terminada / Ley") {
-        leyCount += s.count
-      } else {
-        mergedStages.push(s)
-      }
-    }
-    if (leyCount > 0) mergedStages.push({ name: "Ley", count: leyCount })
+    const mergedStages = [...stageData.stages]
 
     const total = mergedStages.reduce((sum, s) => sum + s.count, 0)
 
@@ -221,6 +211,7 @@ function EstadoContent() {
               <th className="py-3 px-3 text-left min-w-[200px]">Nombre</th>
               <th className="py-3 px-2 text-center whitespace-nowrap">1er Trámite</th>
               <th className="py-3 px-2 text-center whitespace-nowrap">2do Trámite</th>
+              <th className="py-3 px-2 text-center whitespace-nowrap">3er Trámite</th>
               <th className="py-3 px-2 text-center">Ley</th>
             </tr>
           </thead>
@@ -244,6 +235,9 @@ function EstadoContent() {
                   </td>
                   <td className="py-2 px-2 text-center">
                     {isArchived ? <span className="text-white/20">&mdash;</span> : v >= 3 ? <span className="text-[#5bc2ba] font-bold">&#10003;</span> : <span className="text-white/10">&#9675;</span>}
+                  </td>
+                  <td className="py-2 px-2 text-center">
+                    {isArchived ? <span className="text-white/20">&mdash;</span> : v >= 4 ? <span className="text-[#5bc2ba] font-bold">&#10003;</span> : <span className="text-white/10">&#9675;</span>}
                   </td>
                 </tr>
               )
@@ -288,7 +282,8 @@ function EstadoContent() {
             <option value="0">Archivado</option>
             <option value="1">Primer Trámite</option>
             <option value="2">Segundo Trámite</option>
-            <option value="3">Ley / Tercer Trámite</option>
+            <option value="3">Tercer Trámite</option>
+            <option value="4">Tramitación Terminada / Ley</option>
           </select>
         </div>
         <div>

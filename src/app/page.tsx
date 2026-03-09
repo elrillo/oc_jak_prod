@@ -19,22 +19,16 @@ function GeneralContent() {
 
   const { jakMociones, jakBoletinIds, foundName, total, leyesCount, tasaExito, promedioAnual, topAlly } = data
 
-  // Estado de proyectos (donut) — categorías procesadas, merge 3er Trámite + Ley → "Ley"
+  // Estado de proyectos (donut) — explícitamente seteado
   const statusCounts = (() => {
-    const raw = valueCounts(
-      jakMociones.map(m => mapStageLabel(mapStageNumeric(m.etapa_del_proyecto, m.estado_del_proyecto_de_ley)))
-    )
-    const merged: { name: string; count: number }[] = []
-    let leyCount = 0
-    for (const s of raw) {
-      if (s.name === "Tercer Trámite / Mixta" || s.name === "Tramitación Terminada / Ley") {
-        leyCount += s.count
-      } else {
-        merged.push(s)
-      }
-    }
-    if (leyCount > 0) merged.push({ name: "Ley", count: leyCount })
-    return merged.sort((a, b) => getStatusOrder(a.name) - getStatusOrder(b.name))
+    const counts = [
+      { name: "Primer trámite constitucional", count: 97 },
+      { name: "Segundo trámite constitucional", count: 11 },
+      { name: "Tercer trámite constitucional", count: 1 },
+      { name: "Archivado", count: 127 },
+      { name: "Tramitación terminada", count: 19 },
+    ]
+    return counts.sort((a, b) => getStatusOrder(a.name) - getStatusOrder(b.name))
   })()
 
   // Temáticas (barras horizontales) — usa tematica_asociada con fallback
@@ -105,13 +99,13 @@ function GeneralContent() {
     }).length
     const nationalPct = total > 0 ? Math.round(((total - regionalCount) / total) * 100) : 0
 
-    const crossPartyText = "Durante su periodo como diputado, José Antonio Kast presentó diversas mociones parlamentarias junto a miembros de partidos de centroizquierda, centro e izquierda. Los representantes con mayor número de mociones conjuntas son: Jorge Sabag (DC, 34 coautorías); Carlos Olivares (DC, 21 coautorías), José Pérez Arriagada (PRSD, 16 coautorías), Tucapel Jiménez (Ind, 9 coautorías) y Fernando Meza (PRSD, 6 coautorías)."
+    const crossPartyText = "Los representantes con mayor número de mociones conjuntas son: Jorge Sabag (DC, 34 coautorías); Carlos Olivares (DC, 21 coautorías), José Pérez Arriagada (PRSD, 16 coautorías), Tucapel Jiménez (Ind, 9 coautorías) y Fernando Meza (PRSD, 6 coautorías)."
 
     return { peakYear, peakPeriod, nationalPct, regionalCount, crossPartyText }
   }, [jakMociones, yearCounts, total, coautores, jakBoletinIds, foundName, dipMap, boletinPeriodo])
 
   // --- Datos para descripciones enriquecidas ---
-  const topStatus = statusCounts.reduce((max, s) => s.count > max.count ? s : max, statusCounts[0] || { name: '—', count: 0 })
+  const topStatus = { name: "Archivado", count: 127 }
   const topStatusPct = total > 0 ? (topStatus.count / total * 100).toFixed(1) : '0'
   const topTema = comisionCounts[0] || { name: '—', count: 0 }
   const topTemaPct = total > 0 ? (topTema.count / total * 100).toFixed(1) : '0'

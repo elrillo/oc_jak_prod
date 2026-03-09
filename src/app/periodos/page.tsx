@@ -6,7 +6,7 @@ import { KpiCard } from "@/components/KpiCard"
 import { PageHeader } from "@/components/PageHeader"
 import { StorySection } from "@/components/StorySection"
 import { EChart } from "@/components/EChart"
-import { PERIODOS, SUCCESS_PATTERN, categorizeCommission, valueCounts, getStatusOrder, getStatusColor } from "@/lib/legislative"
+import { PERIODOS, SUCCESS_PATTERN, categorizeCommission, valueCounts, getStatusOrder, getStatusColor, mapStageNumeric, mapStageLabel } from "@/lib/legislative"
 import { InsightCard } from "@/components/InsightCard"
 
 const COLORS = ["#6e20d3", "#5bc2ba", "#3498db", "#eda744", "#e8627c", "#1abc9c", "#e67e22", "#95a5a6"]
@@ -23,7 +23,7 @@ function PeriodosContent() {
   const pTasa = pTotal > 0 ? (pLeyes / pTotal) * 100 : 0
 
   const statusCounts = valueCounts(
-    filtered.map(m => m.estado_del_proyecto_de_ley).filter(Boolean)
+    filtered.map(m => mapStageLabel(mapStageNumeric(m.etapa_del_proyecto, m.estado_del_proyecto_de_ley)))
   ).sort((a, b) => getStatusOrder(a.name) - getStatusOrder(b.name))
 
   const themeCounts = valueCounts(

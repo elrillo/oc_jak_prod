@@ -74,8 +74,8 @@ export function mapStageNumeric(etapaTxt: string | null, estadoTxt: string | nul
  */
 export function mapStageLabel(val: number): string {
   switch (val) {
-    case 4: return "Tramitación Terminada / Ley"
-    case 3: return "Tercer Trámite / Mixta"
+    case 4: return "Tramitación Terminada"
+    case 3: return "Tercer Trámite"
     case 2: return "Segundo Trámite"
     case 1: return "Primer Trámite"
     case 0: return "Archivado"
