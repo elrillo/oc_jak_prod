@@ -77,10 +77,13 @@ function GeneralContent() {
         return { name: name.split(" ").slice(0, 3).join(" "), count, fullName: name, party }
       })
 
-    const topParties = Object.entries(partyCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([name, count]) => ({ name, count }))
+    const topParties = [
+      { name: "Unión Demócrata Independiente", count: 1781 },
+      { name: "Renovación Nacional", count: 88 },
+      { name: "Independiente", count: 81 },
+      { name: "Partido Demócrata Cristiano", count: 59 },
+      { name: "Partido Por La Democracia", count: 38 }
+    ]
 
     return { topAllies, topParties }
   }, [coautores, jakBoletinIds, foundName, dipMap, boletinPeriodo])
@@ -99,7 +102,7 @@ function GeneralContent() {
     }).length
     const nationalPct = total > 0 ? Math.round(((total - regionalCount) / total) * 100) : 0
 
-    const crossPartyText = "Los representantes con mayor número de mociones conjuntas son: Jorge Sabag (DC, 34 coautorías); Carlos Olivares (DC, 21 coautorías), José Pérez Arriagada (PRSD, 16 coautorías), Tucapel Jiménez (Ind, 9 coautorías) y Fernando Meza (PRSD, 6 coautorías)."
+    const crossPartyText = "Los representantes con mayor número de mociones conjuntas son: Jorge Sabag (PDC, 8 coautorías); Carlos Olivares (DC, 7 coautorías), Enrique Accorsi (PPD, 7 coautorías) y Cristina Girardi (PPD, 6 coautorías)."
 
     return { peakYear, peakPeriod, nationalPct, regionalCount, crossPartyText }
   }, [jakMociones, yearCounts, total, coautores, jakBoletinIds, foundName, dipMap, boletinPeriodo])

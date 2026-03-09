@@ -212,7 +212,7 @@ export function BoletinCard({
                     className="text-xs px-2.5 py-1 rounded-full border transition-colors hover:bg-white/5"
                     style={{ borderColor: `${color}60`, color }}
                   >
-                    {c.diputado.split(" ").slice(0, 2).join(" ")}
+                    {c.diputado}
                     <span className="opacity-60 ml-1">({party})</span>
                   </span>
                 )

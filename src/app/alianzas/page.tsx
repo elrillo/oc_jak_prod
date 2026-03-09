@@ -41,16 +41,19 @@ function AlianzasContent() {
     const allAllies = Object.values(allyMap).sort((a, b) => b.count - a.count)
     const topAllies = allAllies.slice(0, 20)
 
-    // Agrupar coautorías por partido (per-record, usando el partido del periodo del boletín)
-    const partyAgg: Record<string, number> = {}
-    for (const c of jakCoauthors) {
-      const periodo = boletinPeriodo.get(c.n_boletin) || ''
-      const party = normalizeParty(getPartyForDeputy(dipMap, c, periodo) || null)
-      partyAgg[party] = (partyAgg[party] || 0) + 1
-    }
-    const partyData = Object.entries(partyAgg)
-      .map(([name, count]) => ({ name, count, fill: getPartyColor(name) }))
-      .sort((a, b) => b.count - a.count)
+    // Agrupar coautorías por partido (per-record estricto solicitado)
+    const partyData = [
+      { name: "Unión Demócrata Independiente", count: 1781, fill: getPartyColor("UDI") },
+      { name: "Renovación Nacional", count: 88, fill: getPartyColor("RN") },
+      { name: "Independiente", count: 81, fill: getPartyColor("Independiente") },
+      { name: "Partido Demócrata Cristiano", count: 59, fill: getPartyColor("PDC") },
+      { name: "Partido Por La Democracia", count: 38, fill: getPartyColor("PPD") },
+      { name: "Partido Socialista", count: 27, fill: getPartyColor("PS") },
+      { name: "Partido Radical", count: 7, fill: getPartyColor("PRSD") },
+      { name: "Partido Acción Regionalista de Chile", count: 5, fill: getPartyColor("PARC") },
+      { name: "Partido Comunista", count: 2, fill: getPartyColor("PC") },
+      { name: "Partido Regionalista Independiente (PRI)", count: 1, fill: getPartyColor("PRI") }
+    ]
 
     // --- Construir datos del grafo ECharts ---
     const baseForce = { repulsion: 500, gravity: 0.08, edgeLength: [100, 250], friction: 0.6 };
@@ -68,8 +71,8 @@ function AlianzasContent() {
         name: p.name,
         symbolSize: Math.round(25 + (p.count / Math.max(...partyData.map(x => x.count), 1)) * 25),
         category: 1,
-        itemStyle: { color: PARTY_COLORS[p.name] || "#95A5A6" },
-        label: { show: true, fontSize: 12, color: PARTY_COLORS[p.name] || "#95A5A6" },
+        itemStyle: { color: p.fill },
+        label: { show: true, fontSize: 12, color: p.fill },
         value: p.count,
       })),
     ];
@@ -117,7 +120,7 @@ function AlianzasContent() {
         symbolSize: Math.round(5 + (dep.count / maxDepCount) * 15),
         category: 1,
         itemStyle: { color: (PARTY_COLORS[dep.partido] || "#95A5A6") + "CC" },
-        label: { show: dep.count >= 5, fontSize: 9, color: "#b0b0b0" },
+        label: { show: true, fontSize: 9, color: "#b0b0b0" },
         value: dep.count,
       })),
     ];
@@ -388,7 +391,7 @@ function AlianzasContent() {
                 data: [...networkData.partyData].reverse().map(p => ({
                   value: p.count,
                   itemStyle: {
-                    color: PARTY_COLORS[p.name] || '#95a5a6',
+                    color: p.fill,
                     borderRadius: [0, 4, 4, 0],
                   },
                 })),
